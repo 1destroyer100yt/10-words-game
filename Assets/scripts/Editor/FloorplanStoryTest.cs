@@ -102,6 +102,7 @@ public static class FloorplanStoryTest
         EditorApplication.update -= Tick;
         EditorApplication.update += Tick;
         stepStarted = EditorApplication.timeSinceStartup;
+        TestPlayerPrefsGuard.Stash(); // the run saves a best time on the way out; put the real one back after
         EditorApplication.isPlaying = true;
     }
 

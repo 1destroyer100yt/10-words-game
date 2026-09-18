@@ -1,31 +1,31 @@
 fileFormatVersion: 2
-guid: a7cf08c09635e154ba6b0eb2d072bac0
+guid: 4fbd37baf6b742f4bba067611cacf46d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4897042449467083221
-    second: idle player_0
+      213: -1778242426342505193
+    second: enemy search_0
   - first:
-      213: 8607090098627951332
-    second: idle player_1
+      213: -4381380098474100842
+    second: enemy search_1
   - first:
-      213: -8731189202132023760
-    second: idle player_2
+      213: -7169739649426486281
+    second: enemy search_2
   - first:
-      213: -7139586583296837981
-    second: idle player_3
+      213: 6708858640364951953
+    second: enemy search_3
   - first:
-      213: -3793012827826718466
-    second: idle player_4
+      213: -4519862979729221265
+    second: enemy search_4
   - first:
-      213: -188127521760711914
-    second: idle player_5
+      213: 1014480660513862251
+    second: enemy search_5
   - first:
-      213: -3872014048437071945
-    second: idle player_6
+      213: 8195859390254455495
+    second: enemy search_6
   - first:
-      213: 5329992968873248989
-    second: idle player_7
+      213: -6509660867922961360
+    second: enemy search_7
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -136,7 +136,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: idle player_0
+      name: enemy search_0
       rect:
         serializedVersion: 2
         x: 0
@@ -151,14 +151,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9f593763f71185644b85a721570c71c5
-      internalID: 4897042449467083221
+      spriteID: 69e7e5318cfc4334cacd55ea15b91ca2
+      internalID: -1778242426342505193
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_1
+      name: enemy search_1
       rect:
         serializedVersion: 2
         x: 100
@@ -173,14 +173,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b20432aac1a16b64494df375a0948c60
-      internalID: 8607090098627951332
+      spriteID: c4d9d732fdf3b9640a98e59fdc68c72d
+      internalID: -4381380098474100842
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_2
+      name: enemy search_2
       rect:
         serializedVersion: 2
         x: 200
@@ -195,14 +195,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c7bf7e7b72661844886ef32a61c5bcc7
-      internalID: -8731189202132023760
+      spriteID: 9733bbd20136fa24c879e9813458bc35
+      internalID: -7169739649426486281
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_3
+      name: enemy search_3
       rect:
         serializedVersion: 2
         x: 300
@@ -217,14 +217,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ff22918f677fb2b46bdd1fe1b38d368d
-      internalID: -7139586583296837981
+      spriteID: ea86f8886dbec514e912c45d20319b1e
+      internalID: 6708858640364951953
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_4
+      name: enemy search_4
       rect:
         serializedVersion: 2
         x: 400
@@ -239,14 +239,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 63b5be5d2dcd5544d96fac2dc04bbf3f
-      internalID: -3793012827826718466
+      spriteID: 6d278a89bdbaf914f8ba0c408b47caa1
+      internalID: -4519862979729221265
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_5
+      name: enemy search_5
       rect:
         serializedVersion: 2
         x: 500
@@ -261,14 +261,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 23f8b7e9d2fb05541a28af0178ec1195
-      internalID: -188127521760711914
+      spriteID: aad5756f3fb1f35409caaf915ebfc5c6
+      internalID: 1014480660513862251
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_6
+      name: enemy search_6
       rect:
         serializedVersion: 2
         x: 600
@@ -283,14 +283,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7d6619ae9dc298c469e243f8998a4320
-      internalID: -3872014048437071945
+      spriteID: 93153dee7219ede48aa27dc10e872463
+      internalID: 8195859390254455495
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_7
+      name: enemy search_7
       rect:
         serializedVersion: 2
         x: 700
@@ -305,8 +305,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b7b2f114f1ac67c46b10b8fc853ef141
-      internalID: 5329992968873248989
+      spriteID: 2cc79f1014cb9fd4d89a0ae1f8a9539f
+      internalID: -6509660867922961360
       vertices: []
       indices: 
       edges: []
@@ -315,7 +315,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: a0e74579dc9516547b404739ee61e0cf
+    spriteID: 915151aa5f2e2154bb06f56b5ecf3016
     internalID: 0
     vertices: []
     indices: 
@@ -325,14 +325,14 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      idle player_0: 4897042449467083221
-      idle player_1: 8607090098627951332
-      idle player_2: -8731189202132023760
-      idle player_3: -7139586583296837981
-      idle player_4: -3793012827826718466
-      idle player_5: -188127521760711914
-      idle player_6: -3872014048437071945
-      idle player_7: 5329992968873248989
+      enemy search_0: -1778242426342505193
+      enemy search_1: -4381380098474100842
+      enemy search_2: -7169739649426486281
+      enemy search_3: 6708858640364951953
+      enemy search_4: -4519862979729221265
+      enemy search_5: 1014480660513862251
+      enemy search_6: 8195859390254455495
+      enemy search_7: -6509660867922961360
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

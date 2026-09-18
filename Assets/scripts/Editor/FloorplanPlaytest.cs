@@ -93,6 +93,7 @@ public static class FloorplanPlaytest
 
         EditorApplication.playModeStateChanged -= OnPlayModeChanged;
         EditorApplication.playModeStateChanged += OnPlayModeChanged;
+        TestPlayerPrefsGuard.Stash(); // the run saves a best time on the way out; put the real one back after
         EditorApplication.isPlaying = true;
     }
 

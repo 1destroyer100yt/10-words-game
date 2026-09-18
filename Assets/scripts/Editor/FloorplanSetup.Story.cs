@@ -27,7 +27,10 @@ public static partial class FloorplanSetup
     const int MinZoneNodes = 400;
 
     const float ClueSize = 1.5f;
-    const float ActivatorSize = 1.4f;
+    /// <summary>Longest side of the key, in world units. The art is wider than it is tall.</summary>
+    const float ActivatorSize = 1.6f;
+    /// <summary>The way out's minimap mark. Bigger than the others: it is a hollow ring and must still read as one.</summary>
+    const float ExitMarkerSize = 4f;
     const float SocketSize = 0.9f;
     const float ZoneLineThickness = 1.1f;
     const float ZoneInset = 2.5f;
@@ -70,6 +73,36 @@ public static partial class FloorplanSetup
         "...........www.",
     };
 
+    /// <summary>
+    /// The way out on the minimap: a ring with a hub, the portal seen from above. It replaces the
+    /// jewel's shape there, which read as "the jewel is over there" while you were carrying it.
+    /// Hollow, so it cannot be confused with a demon's solid red dot.
+    /// </summary>
+    static readonly string[] PortalMarkArt =
+    {
+        ".wwwww.",
+        "ww...ww",
+        "w.....w",
+        "w..w..w",
+        "w.....w",
+        "ww...ww",
+        ".wwwww.",
+    };
+
+    /// <summary>
+    /// Sizes a sprite so its LONGER side covers size world units, keeping its proportions, and cancels
+    /// the parent's scale on each axis separately. ScaleSprite forces a square, which squashed the key.
+    /// </summary>
+    static void FitSprite(Transform transform, Sprite sprite, float size)
+    {
+        Vector2 bounds = sprite.bounds.size;
+        float longest = Mathf.Max(bounds.x, bounds.y, 0.0001f);
+        Vector3 parent = transform.parent != null ? transform.parent.lossyScale : Vector3.one;
+        ScaleSprite(transform, sprite,
+            size * bounds.x / longest / Mathf.Max(parent.x, 0.0001f),
+            size * bounds.y / longest / Mathf.Max(parent.y, 0.0001f));
+    }
+
     /// <summary>Applies an art redraw without regenerating the level or moving its objectives.</summary>
     [MenuItem("Tools/Floorplan/Refresh Story Artwork")]
     public static void RefreshStoryArtwork()
@@ -97,8 +130,32 @@ public static partial class FloorplanSetup
         }
         RefreshStoryRenderer(director.activatorBody, key, ActivatorSize);
         RefreshStoryRenderer(director.activatorMarker, key, 3f);
+
+        // Map marks that were grey on the map's own grey, so they only ever showed over the walls.
+        foreach (GameObject cross in director.zoneCrosses)
+        {
+            if (cross == null) continue;
+            foreach (SpriteRenderer bar in cross.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                Undo.RecordObject(bar, "Refresh story artwork");
+                bar.color = Black;
+            }
+        }
+        foreach (SpriteRenderer pip in director.pips)
+        {
+            if (pip == null) continue;
+            Undo.RecordObject(pip, "Refresh story artwork");
+            pip.color = Black;
+        }
+        Undo.RecordObject(director, "Refresh story artwork");
+        director.pipEmptyColor = Black;
+
+        if (director.objective != null && director.objective.exitMarker != null)
+            RefreshStoryRenderer(director.objective.exitMarker, EnsureArtIcon("PortalMark", PortalMarkArt), ExitMarkerSize);
+
         EditorSceneManager.MarkSceneDirty(director.gameObject.scene);
-        Debug.Log("Story artwork refreshed: scratched clues and eye key. Save the main scene to keep the updated sizing.");
+        if (!string.IsNullOrEmpty(director.gameObject.scene.path)) EditorSceneManager.SaveScene(director.gameObject.scene);
+        Debug.Log("Story artwork refreshed and the main scene saved: clue marks, eye key, black map crosses and clue marks, ring for the way out.");
     }
 
     static void RefreshStoryRenderer(SpriteRenderer renderer, Sprite sprite, float worldSize)
@@ -106,8 +163,7 @@ public static partial class FloorplanSetup
         if (renderer == null || sprite == null) return;
         Undo.RecordObjects(new Object[] { renderer, renderer.transform }, "Refresh story artwork");
         renderer.sprite = sprite;
-        Vector3 parent = renderer.transform.parent != null ? renderer.transform.parent.lossyScale : Vector3.one;
-        ScaleSprite(renderer.transform, sprite, worldSize / parent.x, worldSize / parent.y);
+        FitSprite(renderer.transform, sprite, worldSize);
     }
 
     struct Zone
@@ -183,6 +239,7 @@ public static partial class FloorplanSetup
         director.activatorSocket = activatorSocket;
         director.armedColor = Red;
         director.dormantColor = Grey;
+        director.pipEmptyColor = Black;
 
         run.director = director;
         if (cards != null) cards.deferOpening = true; // the director lands it on the theft frame
@@ -342,8 +399,8 @@ public static partial class FloorplanSetup
             cross.transform.position = area.center;
             float diagonal = Mathf.Sqrt(area.width * area.width + area.height * area.height);
             float angle = Mathf.Atan2(area.height, area.width) * Mathf.Rad2Deg;
-            Bar(cross, pixel, ctx, Grey, 60, Vector2.zero, diagonal, ZoneLineThickness, angle);
-            Bar(cross, pixel, ctx, Grey, 60, Vector2.zero, diagonal, ZoneLineThickness, -angle);
+            Bar(cross, pixel, ctx, Black, 60, Vector2.zero, diagonal, ZoneLineThickness, angle);
+            Bar(cross, pixel, ctx, Black, 60, Vector2.zero, diagonal, ZoneLineThickness, -angle);
             cross.SetActive(false);
             crosses[i] = cross;
         }
@@ -407,7 +464,7 @@ public static partial class FloorplanSetup
 
             var renderer = go.AddComponent<SpriteRenderer>();
             renderer.sprite = pixel;
-            renderer.color = Grey;
+            renderer.color = Black; // the panel under the map is the same grey, so grey marks vanish
             renderer.sortingOrder = 70;
             if (ctx.unlit != null) renderer.sharedMaterial = ctx.unlit;
 
@@ -449,7 +506,7 @@ public static partial class FloorplanSetup
         body.color = Red;
         body.sortingOrder = 2;
         if (ctx.unlit != null) body.sharedMaterial = ctx.unlit;
-        ScaleSprite(root.transform, sprite, ActivatorSize, ActivatorSize);
+        FitSprite(root.transform, sprite, ActivatorSize);
 
         marker = CreateStoryMarker(root, sprite, Red, ctx, 3f);
         body.enabled = false;   // hidden until the jewel is yours
@@ -502,8 +559,7 @@ public static partial class FloorplanSetup
         renderer.sortingOrder = 96;
         if (ctx.unlit != null) renderer.sharedMaterial = ctx.unlit;
 
-        float parentScale = Mathf.Max(owner.transform.lossyScale.x, 0.0001f);
-        ScaleSprite(go.transform, sprite, size / parentScale, size / parentScale);
+        FitSprite(go.transform, sprite, size);
         return renderer;
     }
 

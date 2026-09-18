@@ -540,8 +540,9 @@ public static partial class FloorplanSetup
         if (ctx.unlit != null) jewelSprite.sharedMaterial = ctx.unlit;
         ScaleSprite(jewelGo.transform, icons.gem, 1f, 1f);
 
-        SpriteRenderer jewelMarker = CreateObjectiveMarker(jewelGo, icons, Red, ctx);
-        SpriteRenderer exitMarker = CreateObjectiveMarker(exitGo, icons, Red, ctx);
+        SpriteRenderer jewelMarker = CreateObjectiveMarker(jewelGo, icons.gem, 3f, Red, ctx);
+        // A ring for the way out, not the jewel's shape: carrying the jewel, a jewel icon at the exit read as the jewel's location.
+        SpriteRenderer exitMarker = CreateObjectiveMarker(exitGo, EnsureArtIcon("PortalMark", PortalMarkArt), ExitMarkerSize, Red, ctx);
 
         var objective = root.AddComponent<Objective>();
         objective.player = ctx.player.transform;
@@ -560,20 +561,19 @@ public static partial class FloorplanSetup
     }
 
     /// <summary>A minimap dot on an objective, so the map shows where to go without a word.</summary>
-    static SpriteRenderer CreateObjectiveMarker(GameObject owner, Icons icons, Color color, FeatureContext ctx)
+    static SpriteRenderer CreateObjectiveMarker(GameObject owner, Sprite sprite, float size, Color color, FeatureContext ctx)
     {
         var go = new GameObject(MinimapMarkerName);
         go.layer = ctx.minimapLayer >= 0 ? ctx.minimapLayer : owner.layer;
         go.transform.SetParent(owner.transform, false);
         var renderer = go.AddComponent<SpriteRenderer>();
-        renderer.sprite = icons.gem;
+        renderer.sprite = sprite;
         renderer.color = color;
         renderer.sortingOrder = 95;
         if (ctx.unlit != null) renderer.sharedMaterial = ctx.unlit;
 
-        // Undo the owner's scale so every marker is the same size on the map.
-        float parentScale = Mathf.Max(owner.transform.lossyScale.x, 0.0001f);
-        ScaleSprite(go.transform, icons.gem, 3f / parentScale, 3f / parentScale);
+        // Undo the owner's scale so every marker is the same size on the map, keeping the art's proportions.
+        FitSprite(go.transform, sprite, size);
         return renderer;
     }
 

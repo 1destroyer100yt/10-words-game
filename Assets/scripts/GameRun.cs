@@ -171,7 +171,7 @@ public class GameRun : MonoBehaviour
         if (IsCaught || !IsRunning) return;
         IsRunning = false;
         SaveBest();
-        Debug.Log($"Player caught by {(by != null ? by.name : "unknown")} after {RunTime:F1} s.", this);
+        if (Debug.isDebugBuild) Debug.Log($"Player caught by {(by != null ? by.name : "unknown")} after {RunTime:F1} s.", this);
         Caught?.Invoke();
         caughtRoutine = StartCoroutine(CaughtSequence());
     }
@@ -188,7 +188,7 @@ public class GameRun : MonoBehaviour
             PlayerPrefs.SetFloat(bestWinKey, BestWin);
         }
         SaveBest();
-        Debug.Log($"Jewel carried out after {RunTime:F1} s. Wins this session: {Wins}.", this);
+        if (Debug.isDebugBuild) Debug.Log($"Jewel carried out after {RunTime:F1} s. Wins this session: {Wins}.", this);
         Won?.Invoke();
         caughtRoutine = StartCoroutine(WonSequence());
     }
@@ -240,6 +240,20 @@ public class GameRun : MonoBehaviour
 
         caughtRoutine = null;
         Restart();
+    }
+
+    /// <summary>True only while RestartFresh is resetting, so resettables can drop progress they would keep across a death.</summary>
+    public bool RestartingFresh { get; private set; }
+
+    /// <summary>
+    /// A restart that also forgets story progress. The menu uses it when the difficulty changes,
+    /// because a different number of demons is a different game, not a retry.
+    /// </summary>
+    public void RestartFresh()
+    {
+        RestartingFresh = true;
+        try { Restart(); }
+        finally { RestartingFresh = false; }
     }
 
     /// <summary>Soft reset: every IRunResettable goes back to its start state; no scene reload.</summary>

@@ -49,6 +49,9 @@ public class StoryDirector : MonoBehaviour, IRunResettable
     [Tooltip("One mark per clue along the bottom of the minimap.")]
     public SpriteRenderer[] pips = new SpriteRenderer[0];
 
+    [Tooltip("An unsolved clue's mark under the map. Black, because the map panel is the same grey as dormantColor and a grey mark there is invisible.")]
+    public Color pipEmptyColor = Color.black;
+
     [Header("The portal activator")]
     public Transform activator;
     public SpriteRenderer activatorBody;
@@ -266,9 +269,12 @@ public class StoryDirector : MonoBehaviour, IRunResettable
         Clue working = null;
         float nearest = float.MaxValue;
 
+        // From a locker you can see a mark but not work it: solving is meant to be the loud, exposed part.
+        bool hidden = PlayerHidden();
+
         foreach (Clue clue in clues)
         {
-            if (clue == null || clue.Solved) continue;
+            if (hidden || clue == null || clue.Solved) continue;
             float distance = Vector2.Distance(player.position, clue.transform.position);
             if (distance > clueRadius || distance >= nearest) continue;
             nearest = distance;
@@ -316,9 +322,26 @@ public class StoryDirector : MonoBehaviour, IRunResettable
 
     void UpdateActivator()
     {
-        if (activator == null || HasActivator) return;
+        if (activator == null || HasActivator || PlayerHidden()) return;
         if (Vector2.Distance(player.position, activator.position) > activatorRadius) return;
         TakeActivator();
+    }
+
+    PlayerHider hider;
+    bool hiderResolved;
+
+    /// <summary>
+    /// True while the player is inside a hiding spot. Hiding moves the player onto the spot, so
+    /// without this anything within reach of a locker could be used from total safety.
+    /// </summary>
+    bool PlayerHidden()
+    {
+        if (!hiderResolved && player != null)
+        {
+            hider = player.GetComponentInParent<PlayerHider>();
+            hiderResolved = true;
+        }
+        return hider != null && hider.IsHidden;
     }
 
     void TakeActivator()
@@ -402,7 +425,7 @@ public class StoryDirector : MonoBehaviour, IRunResettable
         if (pips == null) return;
         for (int i = 0; i < pips.Length; i++)
         {
-            if (pips[i] != null) pips[i].color = i < solved ? armedColor : dormantColor;
+            if (pips[i] != null) pips[i].color = i < solved ? armedColor : pipEmptyColor;
         }
     }
 
@@ -423,13 +446,13 @@ public class StoryDirector : MonoBehaviour, IRunResettable
 
     /// <summary>
     /// A death costs you the walk back, not the search: solved clues stay solved. Winning ends the
-    /// story, so the next run starts the building over from nothing.
+    /// story, and a difficulty change makes it a different game, so both start the building over.
     /// </summary>
     public void ResetRun()
     {
         HasActivator = false;
 
-        if (restartClean)
+        if (restartClean || (run != null && run.RestartingFresh))
         {
             restartClean = false;
             foreach (Clue clue in clues)

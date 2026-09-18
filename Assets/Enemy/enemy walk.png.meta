@@ -1,31 +1,31 @@
 fileFormatVersion: 2
-guid: a7cf08c09635e154ba6b0eb2d072bac0
+guid: d219e21053f0a684b867c95fc4fc7999
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4897042449467083221
-    second: idle player_0
+      213: 6111277561431656297
+    second: enemy walk_0
   - first:
-      213: 8607090098627951332
-    second: idle player_1
+      213: -6301179449754636892
+    second: enemy walk_1
   - first:
-      213: -8731189202132023760
-    second: idle player_2
+      213: 5523420431104477438
+    second: enemy walk_2
   - first:
-      213: -7139586583296837981
-    second: idle player_3
+      213: 3612141744353489120
+    second: enemy walk_3
   - first:
-      213: -3793012827826718466
-    second: idle player_4
+      213: -4357926252065008358
+    second: enemy walk_4
   - first:
-      213: -188127521760711914
-    second: idle player_5
+      213: -4425874593073606762
+    second: enemy walk_5
   - first:
-      213: -3872014048437071945
-    second: idle player_6
+      213: -507564061432717123
+    second: enemy walk_6
   - first:
-      213: 5329992968873248989
-    second: idle player_7
+      213: -5504731130127809714
+    second: enemy walk_7
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -136,7 +136,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: idle player_0
+      name: enemy walk_0
       rect:
         serializedVersion: 2
         x: 0
@@ -151,14 +151,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9f593763f71185644b85a721570c71c5
-      internalID: 4897042449467083221
+      spriteID: 9795b7af0645b0949aa28f8be6374410
+      internalID: 6111277561431656297
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_1
+      name: enemy walk_1
       rect:
         serializedVersion: 2
         x: 100
@@ -173,14 +173,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b20432aac1a16b64494df375a0948c60
-      internalID: 8607090098627951332
+      spriteID: edfcfcfd698d94d4498f6264414bb8cd
+      internalID: -6301179449754636892
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_2
+      name: enemy walk_2
       rect:
         serializedVersion: 2
         x: 200
@@ -195,14 +195,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c7bf7e7b72661844886ef32a61c5bcc7
-      internalID: -8731189202132023760
+      spriteID: 9a909ed692e73f142bbe8d544925f06f
+      internalID: 5523420431104477438
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_3
+      name: enemy walk_3
       rect:
         serializedVersion: 2
         x: 300
@@ -217,14 +217,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ff22918f677fb2b46bdd1fe1b38d368d
-      internalID: -7139586583296837981
+      spriteID: a3b48ab52d042d94d9e5bc51040f3ead
+      internalID: 3612141744353489120
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_4
+      name: enemy walk_4
       rect:
         serializedVersion: 2
         x: 400
@@ -239,14 +239,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 63b5be5d2dcd5544d96fac2dc04bbf3f
-      internalID: -3793012827826718466
+      spriteID: aeffc299c0ebb484b9516d48f630793f
+      internalID: -4357926252065008358
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_5
+      name: enemy walk_5
       rect:
         serializedVersion: 2
         x: 500
@@ -261,14 +261,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 23f8b7e9d2fb05541a28af0178ec1195
-      internalID: -188127521760711914
+      spriteID: 294023a036bc87748bde79dfa22c7dbc
+      internalID: -4425874593073606762
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_6
+      name: enemy walk_6
       rect:
         serializedVersion: 2
         x: 600
@@ -283,14 +283,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7d6619ae9dc298c469e243f8998a4320
-      internalID: -3872014048437071945
+      spriteID: 61ff0cf3a3ac7114e82a91c8e06d5bbd
+      internalID: -507564061432717123
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_7
+      name: enemy walk_7
       rect:
         serializedVersion: 2
         x: 700
@@ -305,8 +305,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b7b2f114f1ac67c46b10b8fc853ef141
-      internalID: 5329992968873248989
+      spriteID: f0fff575f54114b42ab4286447757660
+      internalID: -5504731130127809714
       vertices: []
       indices: 
       edges: []
@@ -315,7 +315,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: a0e74579dc9516547b404739ee61e0cf
+    spriteID: c2d07c7c128466a4eb1b30f15ce3b2b3
     internalID: 0
     vertices: []
     indices: 
@@ -325,14 +325,14 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      idle player_0: 4897042449467083221
-      idle player_1: 8607090098627951332
-      idle player_2: -8731189202132023760
-      idle player_3: -7139586583296837981
-      idle player_4: -3793012827826718466
-      idle player_5: -188127521760711914
-      idle player_6: -3872014048437071945
-      idle player_7: 5329992968873248989
+      enemy walk_0: 6111277561431656297
+      enemy walk_1: -6301179449754636892
+      enemy walk_2: 5523420431104477438
+      enemy walk_3: 3612141744353489120
+      enemy walk_4: -4357926252065008358
+      enemy walk_5: -4425874593073606762
+      enemy walk_6: -507564061432717123
+      enemy walk_7: -5504731130127809714
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

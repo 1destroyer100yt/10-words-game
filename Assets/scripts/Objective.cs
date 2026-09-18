@@ -65,13 +65,13 @@ public class Objective : MonoBehaviour, IRunResettable
 
         if (!Carrying)
         {
-            if (!locked && jewel != null && Vector2.Distance(player.position, jewel.position) <= pickupRadius) Take();
+            if (!locked && !PlayerHidden() && jewel != null && Vector2.Distance(player.position, jewel.position) <= pickupRadius) Take();
         }
         else
         {
             // Carried just above the player, so you can see you have it.
             if (jewel != null) jewel.position = player.position + carryOffset;
-            if (!exitLocked && exit != null && Vector2.Distance(player.position, exit.position) <= extractRadius)
+            if (!exitLocked && !PlayerHidden() && exit != null && Vector2.Distance(player.position, exit.position) <= extractRadius)
             {
                 run.WinRun();
                 return;
@@ -79,6 +79,23 @@ public class Objective : MonoBehaviour, IRunResettable
         }
 
         Pulse();
+    }
+
+    PlayerHider hider;
+    bool hiderResolved;
+
+    /// <summary>
+    /// True while the player is inside a hiding spot. Hiding moves the player onto the spot, so
+    /// without this anything within reach of a locker could be used from total safety.
+    /// </summary>
+    bool PlayerHidden()
+    {
+        if (!hiderResolved && player != null)
+        {
+            hider = player.GetComponentInParent<PlayerHider>();
+            hiderResolved = true;
+        }
+        return hider != null && hider.IsHidden;
     }
 
     void Take()

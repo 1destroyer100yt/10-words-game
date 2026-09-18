@@ -9,7 +9,7 @@ using UnityEngine;
 /// the cone off the main view.
 /// </summary>
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-public class NpcVision : MonoBehaviour
+public class NpcVision : MonoBehaviour, IRunResettable
 {
     [Tooltip("Object the NPC looks for.")]
     public Transform target;
@@ -33,6 +33,18 @@ public class NpcVision : MonoBehaviour
 
     /// <summary>Where the target was the last time it was seen.</summary>
     public Vector3 LastSeenPosition { get; private set; }
+
+    /// <summary>
+    /// LateUpdate stops sensing while the run is not running, so without this a demon keeps the
+    /// sighting it had at the moment of the catch. On the first frame of the next run NpcChaser reads
+    /// that stale "seen", turns suspicious, then goes to search LastSeenPosition: the catcher walks
+    /// straight back to where it caught you.
+    /// </summary>
+    public void ResetRun()
+    {
+        CanSeeTarget = false;
+        LastSeenPosition = transform.position;
+    }
 
     Mesh mesh;
     Vector3[] vertices;

@@ -356,3 +356,28 @@ PixelFrames.cs.bak and FloorplanSetup.Story.cs.bak.
 - User supplied the mouse tutorial icon and requested a blinking red left button.
 - Updated IntroSequence's distraction lesson: an overlay fills only the left button recess of the existing 10x10 mouse sprite. It alternates red/black every 0.35 seconds; the body remains grey and the right button remains unchanged.
 - The overlay is rebuilt/cleared with each lesson and uses the existing unscaled tutorial animation clock. No image assets or story words changed.
+
+## 2026-09-18 — Review fixes, fresh web build, and the demon comes alive
+
+Review fixes (all verified by compile + Story Test; records guard verified against the registry):
+NpcVision resets between runs; jewel, clues, key and exit can't be used from inside a locker; minimap
+crosses and unsolved clue marks are black instead of the map's own grey; the key keeps its proportions;
+the exit's map mark is a hollow ring instead of a jewel; a difficulty change starts the building over
+(GameRun.RestartFresh); demon/catch logs only in editor and development builds; both editor tests put
+the real best-time records back afterwards (Editor/TestPlayerPrefsGuard.cs); personal paths scrubbed from
+the work notes and .claude/ gitignored.
+
+Web build: Tools/Floorplan/Build Web Player succeeded, 12 MB in Build/Web. Loaded in a browser: intro,
+title, the opening pictures and gameplay all ran with no errors. A full run was not played in the build.
+
+Enemy animation: the demon hovers on its flame, so Codex drew it that way after a first walking pass was
+rejected. Five strips in Assets/Enemy ("enemy idle/walk/chase/search/alert.png", 8/8/6/8/4 frames,
+100 px cells on the original sprite's grid). The flame changes every frame; red cracks and embers in the
+body show the state; red inside the body is always solid so it never shows the floor through.
+Builder changes that came with it:
+- The demon is sized from the original demonguy sprite and centred on the strip frame, so a redraw with
+  a shorter flame no longer makes the demon grow (it would have been ~10% bigger).
+- Found and fixed a long-standing bug: BuildEnemyAnimator ran once per demon and recreates its asset, so
+  every demon except the last pointed at a deleted controller. The first demon, the one always awake,
+  had no animation at all. It is now built once and shared; all three demons link to it.
+Story Test after the rebuild: passed, 45 checks.

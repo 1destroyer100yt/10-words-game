@@ -132,6 +132,9 @@ public static partial class FloorplanSetup
 
     /// <summary>Set while building, for the feature steps that need them (see FloorplanSetup.Features.cs).</summary>
     static Camera MinimapCamera;
+
+    /// <summary>The one enemy animator every demon shares; cleared at the start of each build.</summary>
+    static RuntimeAnimatorController EnemyController;
     static readonly List<GameObject> NpcMarkers = new List<GameObject>();
 
     /// <summary>How many demons the scene holds. The menu decides how many are awake.</summary>
@@ -166,6 +169,7 @@ public static partial class FloorplanSetup
         // to the camera from the previous one.
         MinimapCamera = null;
         NpcMarkers.Clear();
+        EnemyController = null;
 
         int wallLayer = EnsureLayer(WallLayerName);
         if (wallLayer < 0) return;
@@ -504,20 +508,31 @@ public static partial class FloorplanSetup
         renderer.sprite = sprite;
         renderer.sortingOrder = 0;
         if (material != null) renderer.sharedMaterial = material;
-        if (sprite != null)
+        // Size and centre from the original demon sprite when there is one. The animation strips are
+        // drawn on its exact 100 px grid, but their flame length changes frame to frame, so measuring
+        // a strip frame instead would make the demon grow or shrink whenever the art is redrawn.
+        Sprite original = FindNpcSprite();
+        Sprite sizing = original != null && original.name.StartsWith(NpcSpriteAssetName) ? original : sprite;
+        if (sizing != null && sprite != null)
         {
-            Bounds visible = VisibleBounds(sprite);
+            Bounds visible = VisibleBounds(sizing);
             float size = Mathf.Max(visible.size.x, visible.size.y);
             if (size > 0f)
             {
                 float scale = NpcVisualSize / size;
                 visual.transform.localScale = new Vector3(scale, scale, 1f);
-                spriteGo.transform.localPosition = -visible.center;
+                // Centre on the frame that is actually drawn: the original is cropped tight to the
+                // figure, but a strip frame is a full cell with the figure sitting off its middle.
+                spriteGo.transform.localPosition = -VisibleBounds(sprite).center;
             }
         }
 
         var npcAnimator = spriteGo.AddComponent<Animator>();
-        npcAnimator.runtimeAnimatorController = BuildEnemyAnimator(enemyFrames);
+        // Built once per scene build and shared. BuildEnemyAnimator deletes and recreates the asset, and
+        // a recreated asset gets a new GUID, so building it per demon left every demon but the last
+        // pointing at a deleted controller: the first demon, the one always awake, had no animation.
+        if (EnemyController == null) EnemyController = BuildEnemyAnimator(enemyFrames);
+        npcAnimator.runtimeAnimatorController = EnemyController;
 
         go.AddComponent<Seeker>();
 

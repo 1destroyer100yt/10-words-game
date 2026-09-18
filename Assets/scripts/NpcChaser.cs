@@ -217,7 +217,8 @@ public class NpcChaser : MonoBehaviour, IRunResettable
 
     void Log(string message)
     {
-        if (logStateChanges) Debug.Log(message, this);
+        // Editor and development builds only: in a release build these reached every player's browser console.
+        if (logStateChanges && Debug.isDebugBuild) Debug.Log(message, this);
     }
 
     public void ResetRun()

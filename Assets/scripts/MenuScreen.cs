@@ -374,7 +374,7 @@ public class MenuScreen : MonoBehaviour
         if (run != null)
         {
             if (!run.HasBegun) run.Begin();
-            else if (difficultyChanged) run.Restart();
+            else if (difficultyChanged) run.RestartFresh();
         }
     }
 
