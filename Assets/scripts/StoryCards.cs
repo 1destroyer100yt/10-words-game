@@ -50,6 +50,12 @@ public class StoryCards : MonoBehaviour
     [Tooltip("Largest screen pixels per glyph pixel.")]
     public int maxScale = 9;
 
+    [Tooltip("Largest glyph scale for a card shown mid-run, when the player is on screen behind it.")]
+    public int liveMaxScale = 5;
+
+    [Tooltip("Fraction of the screen height kept clear at the top mid-run, for the minimap.")]
+    [Range(0f, 0.6f)] public float liveTopClear = 0.31f;
+
     [Tooltip("Screen pixels kept clear at each side.")]
     public float sideMargin = 90f;
 
@@ -250,7 +256,9 @@ public class StoryCards : MonoBehaviour
         float available = Mathf.Max(80f, Screen.width - 2f * sideMargin);
         int scale = Mathf.Clamp(Mathf.FloorToInt(available / (longest * glyphPixels)), 2, maxScale);
         float offsetY = 0f;
-        if (GameRun.Instance != null && GameRun.Instance.StoryPlaying && words == openingWords)
+        // Cards are stored upper-cased, so compare against the upper-cased opening line.
+        bool opening = openingWords != null && words == openingWords.ToUpperInvariant();
+        if (GameRun.Instance != null && GameRun.Instance.StoryPlaying && opening)
         {
             // The theft reserves rows 16..25: ten pixels, centred one pixel below the frame.
             // Fit the complete two-line card inside that band even in a short Game view.
@@ -259,6 +267,17 @@ public class StoryCards : MonoBehaviour
             int bandScale = Mathf.Max(1, Mathf.FloorToInt(10f * frameScale / (glyphPixels * rows)));
             scale = Mathf.Min(scale, bandScale);
             offsetY = -frameScale;
+        }
+        else if (GameRun.Instance != null && GameRun.Instance.IsRunning)
+        {
+            // Mid-run ("HE WANTS IT BACK", "LONGER") the player is always at the centre of the
+            // screen and the game is still moving. Draw the card smaller, above the player and
+            // below the minimap, instead of over the one thing the player needs to see.
+            int fit = Mathf.Clamp(Mathf.FloorToInt(Screen.height / 144f), 2, Mathf.Max(2, liveMaxScale));
+            scale = Mathf.Min(scale, fit);
+            float liveCell = glyphPixels * scale;
+            float blockHeight = liveCell + (lines.Count - 1) * liveCell * 1.5f;
+            offsetY = Screen.height * 0.5f - Screen.height * liveTopClear - blockHeight * 0.5f;
         }
         float cell = glyphPixels * scale;
         float lineHeight = cell * 1.5f;

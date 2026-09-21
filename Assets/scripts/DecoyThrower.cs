@@ -62,7 +62,7 @@ public class DecoyThrower : MonoBehaviour, IRunResettable
         if (direction.sqrMagnitude < 0.001f) direction = Vector2.up;
 
         RaycastHit2D hit = Physics2D.Raycast(origin, direction, range, wallMask);
-        float distance = hit.collider != null ? Mathf.Max(0.3f, hit.distance - 0.4f) : range;
+        float distance = hit.collider != null ? Mathf.Max(0f, hit.distance - 0.4f) /* never past a close wall */ : range;
         Vector3 landing = origin + direction * distance;
 
         var coin = new GameObject("Coin");

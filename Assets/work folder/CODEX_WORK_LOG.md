@@ -381,3 +381,17 @@ Builder changes that came with it:
   every demon except the last pointed at a deleted controller. The first demon, the one always awake,
   had no animation at all. It is now built once and shared; all three demons link to it.
 Story Test after the rebuild: passed, 45 checks.
+
+## 2026-09-21 — Release fixes from the external review
+
+All verified against the code first; Story Test passes 46 checks after them.
+- Difficulty locks once a clue is solved, so a stray A/D or arrow press on the pause menu can't wipe the search.
+- The game pauses (opens the menu) when the browser window loses focus. Editor excluded so tests aren't interrupted.
+- The title screen reopens after the ending instead of dropping the player into a live run. Story Test updated.
+- The carried jewel hides with the player inside a locker.
+- Mid-run word cards ("HE WANTS IT BACK", "LONGER") are drawn smaller, above the player and below the minimap.
+- Hidden-player discovery measures from where the demon stands; point-blank coins stop short of walls; the
+  volume slider saves once on release; the opening card no longer depends on its text being in capitals;
+  Right Shift sprints; stale comments fixed; web page label says Jewel of the Devil.
+Left for the owner: whether to teach Shift in the intro and whether sprinting should make noise. The web
+build has not been rebuilt with these fixes.

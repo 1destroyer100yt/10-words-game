@@ -260,7 +260,10 @@ public static class FloorplanStoryTest
                 if (director.IsPlaying) break;
                 Pass("ending frames finished");
                 Check(!run.StoryPlaying, "the run was handed back cleanly");
-                Check(Time.timeScale > 0.5f, $"time is running again (timeScale {Time.timeScale:F2})");
+                // The title screen comes back after the ending, so the next run waits for the player.
+                Check(menu.IsOpen, "the title screen reopened after the ending");
+                if (menu.IsOpen) menu.Close();
+                Check(Time.timeScale > 0.5f, $"time runs again once the title is closed (timeScale {Time.timeScale:F2})");
                 Check(director.Current == StoryDirector.Beat.Clues,
                       $"a win starts the building over (beat is {director.Current})");
                 Check(objective.locked, "the jewel is locked again for the next run");

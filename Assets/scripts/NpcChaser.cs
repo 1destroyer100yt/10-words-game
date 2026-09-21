@@ -124,7 +124,7 @@ public class NpcChaser : MonoBehaviour, IRunResettable
         {
             if (arrivedAt < 0f) arrivedAt = Time.time;
             if (hider != null && hider.IsHidden &&
-                Vector2.Distance(searchTarget, hider.SpotPosition) <= hidingDiscoverRadius)
+                Vector2.Distance(transform.position, hider.SpotPosition) <= hidingDiscoverRadius) // where it stands, not where it was sent
             {
                 Catch();
                 return;

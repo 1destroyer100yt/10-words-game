@@ -30,6 +30,16 @@ public static class SoundSettings
         }
     }
 
+    /// <summary>Sets the volume and applies it without writing to storage. Follow with Commit.</summary>
+    public static void Preview(float volume)
+    {
+        PlayerPrefs.SetFloat(VolumeKey, Mathf.Clamp01(volume));
+        Apply();
+    }
+
+    /// <summary>Writes whatever Preview set.</summary>
+    public static void Commit() => Save();
+
     /// <summary>What the listener should actually hear: nothing while muted, else the slider.</summary>
     public static float Heard => Muted ? 0f : Volume;
 

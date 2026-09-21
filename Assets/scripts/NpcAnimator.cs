@@ -3,8 +3,8 @@ using UnityEngine;
 
 /// <summary>
 /// Feeds the enemy's Animator from its behaviour: "Moving" (bool) from the agent's velocity and
-/// "Mode" (int, 0 wander / 1 chase / 2 search) from NpcChaser. The animator picks Idle, Walk,
-/// Chase or Search from those two values.
+/// "Mode" (int, 0 wander / 1 chase / 2 search / 3 suspicious) from NpcChaser. The animator picks
+/// Idle, Walk, Chase, Search or Alert from those two values.
 /// </summary>
 public class NpcAnimator : MonoBehaviour
 {

@@ -98,6 +98,9 @@ public class StoryDirector : MonoBehaviour, IRunResettable
     /// <summary>True once the portal activator has been collected.</summary>
     public bool HasActivator { get; private set; }
 
+    /// <summary>True once any clue is solved. The menu locks the difficulty from then on, so a stray key can't wipe the search.</summary>
+    public bool HasProgress => solved > 0;
+
     static readonly PixelFrames.Frame[] OpeningFrames =
     {
         PixelFrames.Frame.WorldGoingOut,
@@ -255,6 +258,11 @@ public class StoryDirector : MonoBehaviour, IRunResettable
     void Update()
     {
         if (run == null || !run.IsRunning || player == null) return;
+
+        // Objective keeps the jewel over your head even in a locker, which left it floating above
+        // the locker for every demon to see. Hide it with you.
+        if ((Current == Beat.Carrying || Current == Beat.Escaping) && jewelBody != null)
+            jewelBody.enabled = !PlayerHidden();
 
         switch (Current)
         {

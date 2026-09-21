@@ -102,11 +102,16 @@ public class MenuScreen : MonoBehaviour
         menuArt = Resources.Load<Sprite>("Menu/menu-art");
         AudioListener.pause = false;
         if (run == null) run = FindAnyObjectByType<GameRun>();
+        if (run != null)
+        {
+            run.Won += OnWon;
+            run.Restarted += OnRestarted;
+        }
         demons = Mathf.Clamp(PlayerPrefs.GetInt(DifficultyKey, demons), 1, Mathf.Max(1, maxDemons));
         if (run != null && run.wonIcon != null) gemMark = run.wonIcon.sprite;
         var objective = FindAnyObjectByType<Objective>();
         if (objective != null && objective.exitSprite != null) exitMark = objective.exitSprite.sprite;
-        var storyDirector = FindAnyObjectByType<StoryDirector>();
+        storyDirector = FindAnyObjectByType<StoryDirector>(); // kept: the difficulty lock reads it
         if (storyDirector != null)
         {
             if (storyDirector.clues.Length > 0 && storyDirector.clues[0] != null)
@@ -228,6 +233,7 @@ public class MenuScreen : MonoBehaviour
         if (pointer == null || !pointer.leftButton.isPressed)
         {
             draggingVolume = false;
+            SoundSettings.Commit();
             return true;
         }
         SetVolumeFromPointer(pointer.position.ReadValue());
@@ -275,8 +281,45 @@ public class MenuScreen : MonoBehaviour
 
     // ------------------------------------------------------------------ state
 
+    StoryDirector storyDirector;
+    bool reopenAfterWin;
+
+    /// <summary>
+    /// Once a clue is solved the difficulty is fixed. Changing it restarts the building from nothing,
+    /// and A, D and the arrow keys are exactly what a player presses on a menu without thinking.
+    /// </summary>
+    bool DifficultyLocked => run != null && run.HasBegun && storyDirector != null && storyDirector.HasProgress;
+
+    void OnDestroy()
+    {
+        if (run == null) return;
+        run.Won -= OnWon;
+        run.Restarted -= OnRestarted;
+    }
+
+    // After the ending the run restarts on its own. Bring the title back, so there is a clear
+    // moment to play again, change the difficulty or quit, instead of a new run already under way.
+    void OnWon() => reopenAfterWin = true;
+
+    void OnRestarted()
+    {
+        if (!reopenAfterWin) return;
+        reopenAfterWin = false;
+        Open();
+    }
+
+    // runInBackground keeps the web build alive when the page loses focus, but the keys are
+    // released, so the demons would hunt a player who cannot move. Pause instead. Not in the
+    // editor, where clicking another window would stop the automated tests.
+    void OnApplicationFocus(bool focused)
+    {
+        if (focused || Application.isEditor) return;
+        if (run != null && run.HasBegun && run.IsRunning) Open();
+    }
+
     void SetDemons(int count)
     {
+        if (DifficultyLocked) return;
         demons = Mathf.Clamp(count, 1, maxDemons);
         PlayerPrefs.SetInt(DifficultyKey, demons);
         PlayerPrefs.Save();
@@ -302,10 +345,13 @@ public class MenuScreen : MonoBehaviour
         PaintVolume();
     }
 
-    void SetVolume(float volume)
+    void SetVolume(float volume, bool save = true)
     {
         volume = Mathf.Clamp01(volume);
-        SoundSettings.Volume = volume;
+        // A drag moves the knob every frame; writing browser storage each time is wasteful, so the
+        // drag previews and the save happens once on release.
+        if (save) SoundSettings.Volume = volume;
+        else SoundSettings.Preview(volume);
         if (volume > 0.01f && SoundSettings.Muted) SoundSettings.Muted = false;
         PaintSound();
         PaintVolume();
@@ -316,7 +362,7 @@ public class MenuScreen : MonoBehaviour
         if (volumeTrack == null || trackWidth <= 0f) return;
         // The root's pivot is its centre, which is also where every part is anchored.
         RectTransformUtility.ScreenPointToLocalPointInRectangle(root, screenPoint, null, out Vector2 local);
-        SetVolume(Mathf.InverseLerp(trackLeft, trackLeft + trackWidth, local.x));
+        SetVolume(Mathf.InverseLerp(trackLeft, trackLeft + trackWidth, local.x), save: false);
     }
 
     void ToggleFullscreen()
@@ -460,6 +506,7 @@ public class MenuScreen : MonoBehaviour
         soundImage = null;
         volumeTrack = volumeFill = volumeKnob = null;
         fullscreenParts = null;
+        if (draggingVolume) SoundSettings.Commit(); // a drag cut short by a rebuild still saves
         draggingVolume = false;
         quitImage = null;
         startTarget = quitTarget = null;
