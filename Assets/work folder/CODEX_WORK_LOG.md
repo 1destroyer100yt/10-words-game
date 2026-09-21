@@ -395,3 +395,30 @@ All verified against the code first; Story Test passes 46 checks after them.
   Right Shift sprints; stale comments fixed; web page label says Jewel of the Devil.
 Left for the owner: whether to teach Shift in the intro and whether sprinting should make noise. The web
 build has not been rebuilt with these fixes.
+
+## 2026-09-21 — Release prep: name, licence, history, version 1.0
+
+- Name settled: Jewel of the Devil. The owner and a friend have both played the browser build end to end.
+- README.md added at the repo root: premise, how to play, controls as actually bound, how to open and
+  build, credits (Andrew D. with Claude; Bryant with Codex; A* Pathfinding Project by Aron Granberg).
+- LICENSE added: MIT, copyright Andrew D. and Bryant. The README notes Assets/AstarPathfindingProject is
+  third-party and not covered by it.
+- Git history scrubbed: the Initial commit carried the owner's Windows username and local paths in three
+  work-folder files. Both commits were rebuilt with those removed; authors, dates, messages and the second
+  commit's files are unchanged. Committed "Add README and MIT license" on top (no co-author line, at the
+  owner's request). A full pre-scrub backup bundle was kept outside the project.
+  PENDING, owner's side: the force-push. This shell has no GitHub login, so run
+  `git push --force-with-lease origin main` from the owner's own terminal, and do NOT "Pull origin" in
+  GitHub Desktop first (it would merge the old history back). Anyone else with a clone should re-clone.
+- Version bumped to 1.0 in Editor/WebBuild.cs (the build script writes it over Player Settings).
+- Final web build, 1.0: succeeded 2026-09-21 10:29 in 3.5 min, 12 MB in Build/Web, with every fix above.
+  Zipped for itch.io as Jewel-of-the-Devil-web-1.0.zip with index.html at the top level.
+- Second devlog written in the same format as the first.
+- A 10-agent review workflow was started and stopped at the owner's request (too many tokens); it produced
+  nothing. The owner supplied an external review instead; every claim was checked against the code before
+  fixing (see the entry above).
+
+Still open for release: the force-push; whether to teach Shift in the intro and whether sprinting should
+make noise; the itch.io page (cover 630x500, screenshots, description, controls, credits, HTML project,
+1280x720 viewport, fullscreen button on, mobile off); and one full run on the uploaded itch.io page before
+publishing. Saved records may reset per upload on itch.io, so upload the final build once.
