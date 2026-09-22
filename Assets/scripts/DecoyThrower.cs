@@ -25,6 +25,12 @@ public class DecoyThrower : MonoBehaviour, IRunResettable
     public float cooldown = 1.5f;
     public float coinLifetime = 8f;
     public float coinSize = 0.5f;
+
+    [Tooltip("The coin sprite is a white template (the menu tints it grey), so the thrown coin is tinted here.")]
+    public Color coinColor = new Color32(237, 28, 36, 255);
+
+    [Tooltip("The ring sprite is a white template too; untinted, the minimap drew the noise in white.")]
+    public Color ringColor = new Color32(237, 28, 36, 255);
     public float ringSeconds = 0.6f;
 
     PlayerController controller;
@@ -69,6 +75,7 @@ public class DecoyThrower : MonoBehaviour, IRunResettable
         coin.transform.position = origin;
         var renderer = coin.AddComponent<SpriteRenderer>();
         renderer.sprite = coinSprite;
+        renderer.color = coinColor;
         renderer.sortingOrder = 2;
         if (spriteMaterial != null) renderer.sharedMaterial = spriteMaterial;
         if (coinSprite != null)
@@ -97,6 +104,7 @@ public class DecoyThrower : MonoBehaviour, IRunResettable
         go.transform.position = at;
         var renderer = go.AddComponent<SpriteRenderer>();
         renderer.sprite = ringSprite;
+        renderer.color = ringColor;
         renderer.sortingOrder = 90;
         if (spriteMaterial != null) renderer.sharedMaterial = spriteMaterial;
         var ring = go.AddComponent<NoiseRing>();

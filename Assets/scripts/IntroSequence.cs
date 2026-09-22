@@ -48,10 +48,13 @@ public class IntroSequence : MonoBehaviour
         Animate(Mathf.Clamp01(elapsed / lessonSeconds));
         var keyboard = Keyboard.current;
         var pad = Gamepad.current;
-        if (keyboard != null && (keyboard.escapeKey.wasPressedThisFrame || keyboard.enterKey.wasPressedThisFrame || keyboard.spaceKey.wasPressedThisFrame))
-        { Finish(); return; }
-        if (pad != null && (pad.startButton.wasPressedThisFrame || pad.buttonSouth.wasPressedThisFrame))
-        { Finish(); return; }
+        // Esc and Start skip the lot. Enter, Space and A are what people press to mean "next", so they
+        // turn one page; skipping all five on them hid the hiding, coin and clue lessons from anyone
+        // who just wanted to move on a little faster.
+        if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame) { Finish(); return; }
+        if (pad != null && pad.startButton.wasPressedThisFrame) { Finish(); return; }
+        if (keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.spaceKey.wasPressedThisFrame)) { Next(); return; }
+        if (pad != null && pad.buttonSouth.wasPressedThisFrame) { Next(); return; }
         if (keyboard != null && keyboard.leftArrowKey.wasPressedThisFrame) { Previous(); return; }
         if (keyboard != null && keyboard.rightArrowKey.wasPressedThisFrame) { Next(); return; }
         if (pad != null && pad.dpad.left.wasPressedThisFrame) { Previous(); return; }
@@ -152,7 +155,7 @@ public class IntroSequence : MonoBehaviour
         enemy = Graphic(stage, demon, red, new Vector2(240, 0), new Vector2(66, 66));
         exitRing = Graphic(stage, ring, grey, new Vector2(-250, 0), new Vector2(86, 86));
         noise = Graphic(stage, ring, red, Vector2.zero, new Vector2(20, 20));
-        coin = Graphic(stage, pixel, grey, Vector2.zero, new Vector2(10, 10));
+        coin = Graphic(stage, pixel, red, Vector2.zero, new Vector2(10, 10)); // the thrown coin is red in the game too
         jewel.enabled = Lesson >= 3;
         enemy.enabled = Lesson == 1 || Lesson == 2;
         exitRing.enabled = Lesson == 4;

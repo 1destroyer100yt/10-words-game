@@ -422,3 +422,42 @@ Still open for release: the force-push; whether to teach Shift in the intro and 
 make noise; the itch.io page (cover 630x500, screenshots, description, controls, credits, HTML project,
 1280x720 viewport, fullscreen button on, mobile off); and one full run on the uploaded itch.io page before
 publishing. Saved records may reset per upload on itch.io, so upload the final build once.
+
+## 2026-09-21 — Playtest and red coin
+
+- Story Test: passed, 46 checks.
+- Play Test (30 s), run 1: failed on one check, the demon's centre inside a wall for 5 of 1,122 samples (a brief corner cut on a random route). Run 2 was clean, 0 samples. Worth watching, not blocking.
+- Web build 1.0 played in a browser: loads to the title, the opening plays, movement works, a clue solves (wing crossed off the minimap, first pip red), the coin throws and Esc pauses. No console errors. A demon caught the player near the start after about 34 s, unseen in the dark.
+- The thrown coin was white, which breaks the three-colour rule. `DecoyThrower.coinColor` now tints it red (237,28,36). The Coin sprite stays a white template because the menu tints it grey for the controls hint. It compiles; it is not in a web build yet.
+- AI look check: the title art (`Resources/Menu/menu-art.png`) is the giveaway. It is 1672x941 with no pixel grid, a painting reduced to three colours rather than pixel art. The hands have no wrists and read like ribs, and the side buildings have stairs that lead nowhere. The in-game art is real low-res pixel art and does not read as AI.
+
+## 2026-09-22 — Bug hunt: every runtime script read
+
+Fixed:
+- The noise ring a coin draws on the minimap was white (the Ring sprite is a white template and nothing tinted it). `DecoyThrower.ringColor` tints it red.
+- Intro lesson 2 animated its coin grey while the legend beside it and the real coin are red. It is red now.
+- Intro keys: Enter, Space and gamepad A skipped all five lessons, which hid the hiding, coin and clue lessons from anyone pressing them to mean "next". They now go to the next lesson (and finish after the last). Esc and Start still skip everything.
+- The main camera still cleared to Unity's default blue (Skybox clear with no skybox). Nothing showed it, because the floorplan covers everything the camera can reach, but it is now solid black. Edited in `main.unity` directly while Unity was closed (two lines).
+
+Checked with no bugs found: GameRun, StoryDirector, NpcChaser, NpcVision, PlayerHider, HidingSpot, PlayerController, Objective, Decoy, SecurityCamera, DemonCount, Clue, MenuScreen (pause, difficulty, focus, volume), GameExit and the web quit page, RunHud, CameraFollow2D, MinimapReveal, GameAudio, PlayerCameraEffects, StoryCards, PixelCutscene, PixelFrames' cache, WebBuild.
+- Palette audit in the editor: all 80 sprites and images in `main.unity` resolve to the three colours once tinted, and every sprite asset is three colours plus white templates (only Unity's unused `Welcome/2d-template.png` is not).
+
+Balance note, not changed: the player walks at 8 and sprints at 12.8 with no stamina; demons wander at 6 and chase at 7 (8.5 carrying). A straight chase can never catch the player; catches come from corners and walking into one.
+
+Compiles (Roslyn). Not yet run in Unity: Story Test, Play Test and a look at the red ring. Unity was closed.
+
+## 2026-09-22 — Web build audit (Unity optimize-web skill)
+
+- Read every Web setting in the live editor. Already right for itch.io: Gzip with the JS decompression fallback (works whatever headers the host sends), Strip Engine Code on, IL2CPP Optimize Size, exceptions Explicitly Thrown Only, debug symbols off, data caching on, targetFrameRate -1, Geometric memory growth, .NET Standard 2.1.
+- Changed: Wasm code optimisation was Build Times (the development default). `WebBuild.ConfigureWeb` now sets Disk Size with LTO on every build. That setting lives in `Library/`, not in ProjectSettings, so setting it in the build script is the only way it travels to a fresh clone. Guarded with `#if UNITY_WEBGL` because the type only exists with Web Build Support installed. Read back as DiskSizeLTO after Configure Web Build. Expect a smaller `.wasm` and a slower build.
+- Kept on purpose: managed stripping Low (A* uses reflection), Gzip rather than Brotli (Brotli through the JS fallback is slow to unpack), Wasm 2023 off (browser baseline, too late to test widely).
+- Largest stripped assemblies: mscorlib 1.8 MB, UIElements 1.5 MB, RP Core 1.0 MB, Input System 1.0 MB. Visual Scripting and the other unused packages were already stripped out, so there is nothing safe left to remove this close to release.
+- Side effect, harmless: saving ProjectSettings dropped `InputSystem_Actions` from preloadedAssets. The committed entry was a leftover from a build; the Input System's build provider adds it before every build and removes it after (BuildProviderHelpers.cs).
+
+## 2026-09-22 — New title art, final web build
+
+- Title art replaced. The old `Resources/Menu/menu-art.png` came from an image generator (1672x941, no pixel grid, AI anatomy). Codex drew the new one pixel by pixel in Python (standard library only, no image model), in two passes: v1 had brick marks that read as the letter E, a cloak that floated like wings and outline-only buildings; v2 fixed all three. The owner chose v2.
+- The new file is 320x180, exactly the three colours, and 100% black under the menu block (x 96-224, y 96-180) and both corner controls. Checked with an independent script as well as Codex's own. It scales 4x at 1280x720 and 6x at 1920x1080. Import settings unchanged (sprite, point, no mips, uncompressed).
+- Kept for reproduction in `Assets/work folder/title-art/`: `draw_title.py`, Codex's `NOTES.md`, and a 630x500 itch cover drawn from the same code. The owner is using their own cover image on itch instead; it is square, so it needs 630x500 letterboxing or itch will crop the title text.
+- Web build 1.0 rebuilt with every change since the last one (title art, red coin and noise ring, intro keys, black camera clear, Disk Size LTO). Build took 11 min (LTO); wasm 9.2 MB -> 8.2 MB, total 11 MB, zip 11.7 MB with index.html at the top.
+- Checked in the browser: the intro turns one page on Enter and skips to the title on Esc; the new title renders with nothing under the controls; the thrown coin is red and its minimap ring is red. Story Test 46/46 and Play Test (0 wall samples) passed in the editor before the build.

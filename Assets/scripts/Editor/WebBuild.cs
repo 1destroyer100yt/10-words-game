@@ -101,6 +101,13 @@ public static class WebBuild
         PlayerSettings.SetManagedStrippingLevel(web, ManagedStrippingLevel.Low);
         PlayerSettings.SetIl2CppCompilerConfiguration(web, Il2CppCompilerConfiguration.Release);
         PlayerSettings.SetIl2CppCodeGeneration(web, Il2CppCodeGeneration.OptimizeSize);
+
+        // Release Wasm: smallest download, link-time optimised. This one lives in Library/, not in
+        // ProjectSettings, so it has to be set here or every fresh clone builds with the dev default
+        // (Build Times). Guarded because the type only exists with Web Build Support installed.
+#if UNITY_WEBGL
+        UnityEditor.WebGL.UserBuildSettings.codeOptimization = UnityEditor.WebGL.WasmCodeOptimization.DiskSizeLTO;
+#endif
     }
 
     [MenuItem(BuildPath)]
