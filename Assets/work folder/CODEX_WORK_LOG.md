@@ -461,3 +461,46 @@ Compiles (Roslyn). Not yet run in Unity: Story Test, Play Test and a look at the
 - Kept for reproduction in `Assets/work folder/title-art/`: `draw_title.py`, Codex's `NOTES.md`, and a 630x500 itch cover drawn from the same code. The owner is using their own cover image on itch instead; it is square, so it needs 630x500 letterboxing or itch will crop the title text.
 - Web build 1.0 rebuilt with every change since the last one (title art, red coin and noise ring, intro keys, black camera clear, Disk Size LTO). Build took 11 min (LTO); wasm 9.2 MB -> 8.2 MB, total 11 MB, zip 11.7 MB with index.html at the top.
 - Checked in the browser: the intro turns one page on Enter and skips to the title on Esc; the new title renders with nothing under the controls; the thrown coin is red and its minimap ring is red. Story Test 46/46 and Play Test (0 wall samples) passed in the editor before the build.
+
+## 2026-09-22 — Harder difficulties (levels 4 and 5)
+
+- The selector now has five levels: three demon faces (1-3 demons, as before), then two skulls (the caught icon) for the hard levels. Levels 4 and 5 wake all three demons and make them more dangerous; no scene rebuild was needed, the new fields take their defaults.
+- `DemonCount` owns the level (`SetLevel`, `Level`, `Levels`, `hardTiers`). Tier multipliers, as built -> level 4 -> level 5: chase speed 7 -> 8.4 -> 10.2 (the player walks at 8 and runs at 12.8; with the jewel level 5 chases at 12.4), wander 6 -> 6.6 -> 7.5, time to spot 1.5 s -> 1.05 s -> 0.68 s, sight 12 -> 14 -> 16 (the player's light radius), locker find radius +0.5 / +1, search time +1.5 s / +3 s.
+- `NpcChaser.SetStrength` and `NpcVision.bonusDistance` hold the tier apart from `chaseSpeed`, `detectTime` and `viewDistance`, which the story director raises while the jewel is carried and restores after.
+- The menu compares levels, not awake counts, so moving between 3, 4 and 5 (all three demons) still restarts fresh; the difficulty lock after a solved clue still applies. Saved levels 1-3 keep working.
+- Faster demons cut corners: at level-5 speed the Play Test found the demon's centre inside a wall in 9 samples (half-radius overlap 20). `NpcChaser.Awake` now sets `AIPath.constrainInsideGraph`, which keeps the agent on the walkable grid (already an agent radius from walls). Same stress test after: 0 inside, 0 half-radius, no stalls over 1 s. Normal speed after: 0 inside, no stalls.
+- Also: `FloorplanSetup.ConfigureCamera` now sets the black solid clear itself, so a rebuild keeps it.
+- Verified: Story Test 46/46, Play Test at level 5 (live values read back: level 5 of 5, 3 awake, wander 7.5, sight 16), title screenshot with the five-level selector. Editor difficulty put back to 3 afterwards.
+
+## 2026-09-22 — Player animations (in progress at end of day)
+
+- Asked for: more player animations, remembering the player hovers. The original idle strip had no jets at all, so standing still looked grounded.
+- Codex brief (hand-placed pixels built from the original body, three colours, 100x100 cells, preview APNGs): `idle player.png` (8 frames, hovering with small flickering jets, replaces the jet-less idle), `sprint player.png` (6 frames, full-power jets for Shift), `caught player.png` (8 frames, jets die and red cracks spread, plays once and holds). Codex finished at wrap-up. The strips, previews, script and notes are in `Build/pending-player-anim/` (gitignored, outside Assets so the builder does not pick them up). Checked: three colours plus fully transparent only, 100x100 cells, idle body pixel-identical to the original in all 8 frames. Previews sent to the owner. **Nothing is installed yet: waiting for the owner's OK.**
+- Code, done and inert until the strips exist:
+  - `FloorplanSetup`: finds `sprint` and `caught` strips by name, builds Sprint and Caught states (Caught from Any State, no loop, back to Idle when cleared), and a new menu item **Tools/Floorplan/Refresh Player Animations** that rebuilds only the player's animator and saves the scene, without regenerating the level.
+  - `PlayerController`: sets `Sprint` while moving with Shift held and `Caught` on GameRun.Caught, with the animator on unscaled time during the death (the caught sequence slows then freezes time). Reset puts it back. Parameters are only set if the animator has them, so the current two-state animator logs nothing.
+  - `PlayerHider`: a player found in a locker steps out where the locker is, so the death is visible.
+- Verified with the current animator: compiles, Story Test 46/46, no parameter warnings.
+- To finish: check Codex's strips (palette, 100x100 cells, body position identical to the original), show the owner, copy the approved PNGs into `Assets/Player/` (idle overwrites in place), run Refresh Player Animations, test a caught run and a sprint, then a web build (ask first).
+
+## Open at end of 2026-09-22
+
+- Player animation art: review and install (above).
+- Web build: needed for levels 4-5 and the animations. Ask before building.
+- Intro: teach running with a wide keycap and an up-arrow (the Shift symbol, no letters). Recommended, now that levels 4-5 need running.
+- Optional: best times per difficulty level (a level-1 win and a level-5 win share one record).
+- Owner's side: commit, `git push --force-with-lease origin main` from their own terminal (no Pull origin first), itch page, their square cover image needs a 630x500 version, and the AI-disclosure answer on itch.
+
+## 2026-09-22 — Player animations installed
+
+- The owner approved Codex's strips. `Assets/Player/idle player.png` was overwritten in place (it now hovers, with small jets); `sprint player.png` and `caught player.png` are new. Tools/Floorplan/Refresh Player Animations rebuilt `Player.controller`: Idle (8), Boost (6), Sprint (6), Caught (8, no loop, from Any State), and saved the scene. The original jet-less idle is kept locally in `Build/pending-player-anim/original idle player.png` and in git history.
+- Builder fix: the player is now sized from its body only (`VisibleBounds(..., bodyOnly: true)` ignores pure red), because the new idle's first frame includes jets and a rebuild would have shrunk and shifted the player. Checked: the scene keeps scale 6 and offset -0.18, and a rebuild computes the same.
+- Verified in play mode: the Sprint state plays the sprint frames (driven through the animator; the editor drops simulated keys while the Game view is unfocused); a real `CatchPlayer` sets Caught, switches the animator to unscaled time, plays the death while time is frozen and holds the last cracked frame; after the restart it is back to Idle on normal time. In-game screenshots sent to the owner. Story Test 46/46 afterwards.
+- `Assets/work folder/player-anim/make_player.py` and `NOTES.md` record how the strips were made (no PNGs there, so the builder cannot mistake a copy for the idle strip). Its source folder comes from `PLAYER_SOURCE`; no personal paths.
+
+## Open at end of 2026-09-22 (final)
+
+- Web build with levels 4-5 and the player animations. Ask first (about 11 minutes).
+- Intro: teach running (wide keycap with an up-arrow, no letters). Recommended.
+- Optional: best times per difficulty level.
+- Owner's side: commit (scripts, scene, `Player.controller` and the three strips, title art, work folder), `git push --force-with-lease origin main` from their own terminal with no Pull origin first, itch page, a 630x500 version of their cover, the AI-disclosure answer.

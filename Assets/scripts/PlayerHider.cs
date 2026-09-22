@@ -33,6 +33,8 @@ public class PlayerHider : MonoBehaviour, IRunResettable
         body = GetComponent<Rigidbody2D>();
     }
 
+    GameRun subscribedTo;
+
     void OnEnable()
     {
         if (actions != null) interact = actions.FindAction("Player/Interact");
@@ -41,8 +43,31 @@ public class PlayerHider : MonoBehaviour, IRunResettable
         if (interact != null) interact.Enable();
     }
 
+    void OnDisable()
+    {
+        if (subscribedTo != null) subscribedTo.Caught -= OnCaught;
+        subscribedTo = null;
+    }
+
+    void Subscribe()
+    {
+        GameRun run = GameRun.Instance;
+        if (run == null || run == subscribedTo) return;
+        if (subscribedTo != null) subscribedTo.Caught -= OnCaught;
+        subscribedTo = run;
+        run.Caught += OnCaught;
+    }
+
+    // Found in a locker: come out where the locker stands, so the caught animation is seen rather
+    // than played inside a hidden sprite.
+    void OnCaught()
+    {
+        if (IsHidden) Unhide(false);
+    }
+
     void Update()
     {
+        Subscribe();
         GameRun run = GameRun.Instance;
         if (run != null && !run.AcceptsGameplayInput) return;
         if (!InteractPressed()) return;

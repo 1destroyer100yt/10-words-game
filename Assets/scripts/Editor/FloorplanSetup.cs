@@ -41,6 +41,8 @@ public static partial class FloorplanSetup
     const string PlayerControllerPath = "Assets/Player/Player.controller";
     const string PlayerIdleClipPath = "Assets/Player/Player_Idle.anim";
     const string PlayerBoostClipPath = "Assets/Player/Player_Boost.anim";
+    const string PlayerSprintClipPath = "Assets/Player/Player_Sprint.anim";
+    const string PlayerCaughtClipPath = "Assets/Player/Player_Caught.anim";
     const string InputActionsPath = "Assets/Settings/InputSystem_Actions.inputactions";
     const string SpriteChildName = "Sprite";
     const float PlayerVisualSize = 1.8f;
@@ -845,7 +847,9 @@ public static partial class FloorplanSetup
     /// Bounds of the sprite's opaque pixels in the sprite's local units, relative to its pivot.
     /// Falls back to the full sprite bounds when the texture is not readable.
     /// </summary>
-    static Bounds VisibleBounds(Sprite sprite)
+    /// <param name="bodyOnly">Ignore pure red pixels: the player's jets, which flicker and would
+    /// otherwise make its size depend on which frame happens to be first.</param>
+    static Bounds VisibleBounds(Sprite sprite, bool bodyOnly = false)
     {
         Texture2D texture = sprite.texture;
         if (texture == null || !texture.isReadable) return sprite.bounds;
@@ -864,7 +868,9 @@ public static partial class FloorplanSetup
             int row = (y0 + y) * textureWidth + x0;
             for (int x = 0; x < width; x++)
             {
-                if (pixels[row + x].a <= 8) continue;
+                Color32 pixel = pixels[row + x];
+                if (pixel.a <= 8) continue;
+                if (bodyOnly && pixel.r == 237 && pixel.g == 28 && pixel.b == 36) continue;
                 if (x < minX) minX = x;
                 if (x > maxX) maxX = x;
                 if (y < minY) minY = y;
@@ -969,6 +975,8 @@ public static partial class FloorplanSetup
     {
         public Texture2D idle;
         public Texture2D boost;
+        public Texture2D sprint; // optional: running with Shift
+        public Texture2D caught; // optional: plays once when a demon catches the player
     }
 
     static GameObject CreatePlayer(GridGraph graph, Material material)
@@ -1005,7 +1013,7 @@ public static partial class FloorplanSetup
             Sprite[] boostFrames = SliceStrip(sheets.boost);
             if (idleFrames.Length > 0 && boostFrames.Length > 0)
             {
-                animator.runtimeAnimatorController = BuildPlayerAnimator(idleFrames, boostFrames);
+                animator.runtimeAnimatorController = BuildPlayerAnimator(idleFrames, boostFrames, SliceOptional(sheets.sprint), SliceOptional(sheets.caught));
                 firstFrame = idleFrames[0];
                 Debug.Log($"Floorplan: player animations built from '{sheets.idle.name}' ({idleFrames.Length} idle frames) " +
                           $"and '{sheets.boost.name}' ({boostFrames.Length} boost frames).");
@@ -1026,7 +1034,7 @@ public static partial class FloorplanSetup
         renderer.sprite = firstFrame;
         if (firstFrame != null)
         {
-            Bounds visible = VisibleBounds(firstFrame);
+            Bounds visible = VisibleBounds(firstFrame, bodyOnly: true); // the hover jets are not the body
             float size = Mathf.Max(visible.size.x, visible.size.y);
             if (size > 0f)
             {
@@ -1068,7 +1076,10 @@ public static partial class FloorplanSetup
             if (texture == null) continue;
 
             string name = texture.name.ToLowerInvariant();
-            if ((name.Contains("boost") || name.Contains("bost")) && sheets.boost == null) sheets.boost = texture;
+            // The optional strips first, by name only: their frame counts match idle and boost.
+            if (name.Contains("sprint")) { if (sheets.sprint == null) sheets.sprint = texture; }
+            else if (name.Contains("caught")) { if (sheets.caught == null) sheets.caught = texture; }
+            else if ((name.Contains("boost") || name.Contains("bost")) && sheets.boost == null) sheets.boost = texture;
             else if (name.Contains("idle") && sheets.idle == null) sheets.idle = texture;
             else if (texture.height > 0 && texture.width >= 2 * texture.height && texture.width % texture.height == 0) strips.Add(texture);
         }
@@ -1148,7 +1159,13 @@ public static partial class FloorplanSetup
         return ordered.ToArray();
     }
 
-    static RuntimeAnimatorController BuildPlayerAnimator(Sprite[] idleFrames, Sprite[] boostFrames)
+    static Sprite[] SliceOptional(Texture2D sheet) => sheet != null ? SliceStrip(sheet) : new Sprite[0];
+
+    /// <summary>
+    /// Idle and Boost always; Sprint and Caught when their strips exist. PlayerController drives
+    /// Boost (moving), Sprint (moving with Shift held) and Caught (a demon got you).
+    /// </summary>
+    static RuntimeAnimatorController BuildPlayerAnimator(Sprite[] idleFrames, Sprite[] boostFrames, Sprite[] sprintFrames, Sprite[] caughtFrames)
     {
         EnsureFolder(PlayerFolder);
         AnimationClip idleClip = CreateSpriteClip(PlayerIdleClipPath, "Player_Idle", idleFrames);
@@ -1168,23 +1185,99 @@ public static partial class FloorplanSetup
         boost.motion = boostClip;
         machine.defaultState = idle;
 
-        AnimatorStateTransition toBoost = idle.AddTransition(boost);
-        toBoost.hasExitTime = false;
-        toBoost.duration = 0f;
-        toBoost.AddCondition(AnimatorConditionMode.If, 0f, "Boost");
+        Link(idle, boost, AnimatorConditionMode.If, "Boost");
+        Link(boost, idle, AnimatorConditionMode.IfNot, "Boost");
 
-        AnimatorStateTransition toIdle = boost.AddTransition(idle);
-        toIdle.hasExitTime = false;
-        toIdle.duration = 0f;
-        toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, "Boost");
+        if (sprintFrames != null && sprintFrames.Length > 0)
+        {
+            // Sprint is only ever set while moving, so it can be reached from standing too.
+            controller.AddParameter("Sprint", AnimatorControllerParameterType.Bool);
+            AnimatorState sprint = machine.AddState("Sprint");
+            sprint.motion = CreateSpriteClip(PlayerSprintClipPath, "Player_Sprint", sprintFrames);
+            Link(idle, sprint, AnimatorConditionMode.If, "Sprint");
+            Link(boost, sprint, AnimatorConditionMode.If, "Sprint");
+            Link(sprint, boost, AnimatorConditionMode.IfNot, "Sprint", "Boost");
+            Link(sprint, idle, AnimatorConditionMode.IfNot, "Boost");
+        }
+
+        if (caughtFrames != null && caughtFrames.Length > 0)
+        {
+            // From anywhere, once, then held on its last frame until the run resets.
+            controller.AddParameter("Caught", AnimatorControllerParameterType.Bool);
+            AnimatorState caught = machine.AddState("Caught");
+            caught.motion = CreateSpriteClip(PlayerCaughtClipPath, "Player_Caught", caughtFrames, loop: false);
+            AnimatorStateTransition fromAny = machine.AddAnyStateTransition(caught);
+            fromAny.hasExitTime = false;
+            fromAny.duration = 0f;
+            fromAny.canTransitionToSelf = false;
+            fromAny.AddCondition(AnimatorConditionMode.If, 0f, "Caught");
+            Link(caught, idle, AnimatorConditionMode.IfNot, "Caught");
+        }
 
         EditorUtility.SetDirty(controller);
         AssetDatabase.SaveAssets();
         return controller;
     }
 
-    /// <summary>A looping sprite-swap clip; the last frame is held for a full step before looping.</summary>
-    static AnimationClip CreateSpriteClip(string path, string name, Sprite[] frames, float fps = PlayerAnimationFps)
+    /// <summary>An instant transition on one bool, optionally with a second bool that must be true.</summary>
+    static void Link(AnimatorState from, AnimatorState to, AnimatorConditionMode mode, string parameter, string alsoTrue = null)
+    {
+        AnimatorStateTransition transition = from.AddTransition(to);
+        transition.hasExitTime = false;
+        transition.duration = 0f;
+        transition.AddCondition(mode, 0f, parameter);
+        if (alsoTrue != null) transition.AddCondition(AnimatorConditionMode.If, 0f, alsoTrue);
+    }
+
+    /// <summary>
+    /// Rebuilds only the player's animator from the strips in Assets/Player, for new animation art,
+    /// without regenerating the level.
+    /// </summary>
+    [MenuItem("Tools/Floorplan/Refresh Player Animations")]
+    public static void RefreshPlayerAnimations()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode)
+        {
+            Debug.LogError("Player animations: stop Play mode first.");
+            return;
+        }
+
+        var player = Object.FindAnyObjectByType<PlayerController>();
+        if (player == null || player.animator == null)
+        {
+            Debug.LogError("Player animations: open the main scene first.");
+            return;
+        }
+
+        PlayerSheets sheets = FindPlayerSheets();
+        if (sheets.idle == null || sheets.boost == null)
+        {
+            Debug.LogError($"Player animations: no idle and boost strips under {PlayerFolder}.");
+            return;
+        }
+
+        Sprite[] idleFrames = SliceStrip(sheets.idle);
+        Sprite[] boostFrames = SliceStrip(sheets.boost);
+        Sprite[] sprintFrames = SliceOptional(sheets.sprint);
+        Sprite[] caughtFrames = SliceOptional(sheets.caught);
+
+        Undo.RecordObject(player.animator, "Refresh player animations");
+        player.animator.runtimeAnimatorController = BuildPlayerAnimator(idleFrames, boostFrames, sprintFrames, caughtFrames);
+        var renderer = player.animator.GetComponent<SpriteRenderer>();
+        if (renderer != null && idleFrames.Length > 0)
+        {
+            Undo.RecordObject(renderer, "Refresh player animations");
+            renderer.sprite = idleFrames[0];
+        }
+
+        EditorSceneManager.MarkSceneDirty(player.gameObject.scene);
+        EditorSceneManager.SaveScene(player.gameObject.scene);
+        Debug.Log($"Player animations: idle {idleFrames.Length}, boost {boostFrames.Length}, " +
+                  $"sprint {sprintFrames.Length}, caught {caughtFrames.Length} frames. Scene saved.");
+    }
+
+    /// <summary>A sprite-swap clip; the last frame is held for a full step (then loops, if looping).</summary>
+    static AnimationClip CreateSpriteClip(string path, string name, Sprite[] frames, float fps = PlayerAnimationFps, bool loop = true)
     {
         var clip = new AnimationClip { name = name, frameRate = fps };
         var binding = new EditorCurveBinding { type = typeof(SpriteRenderer), path = "", propertyName = "m_Sprite" };
@@ -1197,7 +1290,7 @@ public static partial class FloorplanSetup
         AnimationUtility.SetObjectReferenceCurve(clip, binding, keys);
 
         AnimationClipSettings clipSettings = AnimationUtility.GetAnimationClipSettings(clip);
-        clipSettings.loopTime = true;
+        clipSettings.loopTime = loop;
         AnimationUtility.SetAnimationClipSettings(clip, clipSettings);
 
         if (AssetDatabase.LoadAssetAtPath<AnimationClip>(path) != null) AssetDatabase.DeleteAsset(path);
@@ -1359,6 +1452,9 @@ public static partial class FloorplanSetup
         }
 
         camera.orthographic = true;
+        // Anything the floorplan does not cover clears to black, not Unity's default blue.
+        camera.clearFlags = CameraClearFlags.SolidColor;
+        camera.backgroundColor = Color.black;
 
         if (player == null)
         {

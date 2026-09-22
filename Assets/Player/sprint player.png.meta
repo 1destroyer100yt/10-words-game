@@ -1,31 +1,61 @@
 fileFormatVersion: 2
-guid: a7cf08c09635e154ba6b0eb2d072bac0
+guid: 6acd71d2f4662144e9ef7282d9402e3e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4897042449467083221
-    second: idle player_0
+      213: -8553742393265111477
+    second: sprint player_0
   - first:
-      213: 8607090098627951332
-    second: idle player_1
+      213: -3744759227788109212
+    second: sprint player_1
   - first:
-      213: -8731189202132023760
-    second: idle player_2
+      213: 192743048487626468
+    second: sprint player_2
   - first:
-      213: -7139586583296837981
-    second: idle player_3
+      213: -6636683598866742946
+    second: sprint player_3
   - first:
-      213: -3793012827826718466
-    second: idle player_4
+      213: -666947266702956892
+    second: sprint player_4
   - first:
-      213: -188127521760711914
-    second: idle player_5
+      213: -8052622486533488067
+    second: sprint player_5
   - first:
-      213: -3872014048437071945
-    second: idle player_6
+      213: 5414531094297982437
+    second: sprint player_6
   - first:
-      213: 5329992968873248989
-    second: idle player_7
+      213: -2985168333649787267
+    second: sprint player_7
+  - first:
+      213: -3523406281076569169
+    second: sprint player_8
+  - first:
+      213: 3126843558087112653
+    second: sprint player_9
+  - first:
+      213: -8232528086971230643
+    second: sprint player_10
+  - first:
+      213: 953018634091786056
+    second: sprint player_11
+  - first:
+      213: 9119811117560017210
+    second: sprint player_12
+  - first:
+      213: -7120796151963071374
+    second: sprint player_13
+  - first:
+      213: 8357744796096084999
+    second: sprint player_14
+  - first:
+      213: -3118062835548244556
+    second: sprint player_15
+  - first:
+      213: 6666910126593673244
+    second: sprint player_16
+  - first:
+      213: 632913082603160529
+    second: sprint player_17
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -136,7 +166,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: idle player_0
+      name: sprint player_0
       rect:
         serializedVersion: 2
         x: 0
@@ -151,14 +181,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 03b2e1abede9af84d9e03818989da83d
-      internalID: 4897042449467083221
+      spriteID: 037ddfbc26600dc49ad9ef6189c09d71
+      internalID: -8553742393265111477
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_1
+      name: sprint player_1
       rect:
         serializedVersion: 2
         x: 100
@@ -173,14 +203,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c5054b6e953e81043bdf14cce858e7ec
-      internalID: 8607090098627951332
+      spriteID: 2fc8807b25977ee40adae7e13c90ff0d
+      internalID: -3744759227788109212
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_2
+      name: sprint player_2
       rect:
         serializedVersion: 2
         x: 200
@@ -195,14 +225,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b644affaa2ad0eb41a71479b96486009
-      internalID: -8731189202132023760
+      spriteID: c125f89e2fb40194db8e64c691e1d87c
+      internalID: 192743048487626468
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_3
+      name: sprint player_3
       rect:
         serializedVersion: 2
         x: 300
@@ -217,14 +247,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: fb224a5fce1c7774f8a2e797e817aa76
-      internalID: -7139586583296837981
+      spriteID: fc8418d6c65b859448e8155f8e1d3b21
+      internalID: -6636683598866742946
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_4
+      name: sprint player_4
       rect:
         serializedVersion: 2
         x: 400
@@ -239,14 +269,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 1b6942062ba5da743b63fd09efae236d
-      internalID: -3793012827826718466
+      spriteID: 7d6d52046c31d2843b1da7db3fc098a4
+      internalID: -666947266702956892
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_5
+      name: sprint player_5
       rect:
         serializedVersion: 2
         x: 500
@@ -261,52 +291,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: aa030ae4abfbd6948bba4ef9f97f4617
-      internalID: -188127521760711914
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: idle player_6
-      rect:
-        serializedVersion: 2
-        x: 600
-        y: 0
-        width: 100
-        height: 100
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 603e261c9da89c945aba4f5e50d02c15
-      internalID: -3872014048437071945
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: idle player_7
-      rect:
-        serializedVersion: 2
-        x: 700
-        y: 0
-        width: 100
-        height: 100
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 8506409c73f76a745bdd9247ee0ed184
-      internalID: 5329992968873248989
+      spriteID: b063882e6c2aac84ebadb65a9c6d5a60
+      internalID: -8052622486533488067
       vertices: []
       indices: 
       edges: []
@@ -315,7 +301,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: a0e74579dc9516547b404739ee61e0cf
+    spriteID: a0631ddbe23be6447b8667367b7dbf1c
     internalID: 0
     vertices: []
     indices: 
@@ -325,14 +311,12 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      idle player_0: 4897042449467083221
-      idle player_1: 8607090098627951332
-      idle player_2: -8731189202132023760
-      idle player_3: -7139586583296837981
-      idle player_4: -3793012827826718466
-      idle player_5: -188127521760711914
-      idle player_6: -3872014048437071945
-      idle player_7: 5329992968873248989
+      sprint player_0: -8553742393265111477
+      sprint player_1: -3744759227788109212
+      sprint player_2: 192743048487626468
+      sprint player_3: -6636683598866742946
+      sprint player_4: -666947266702956892
+      sprint player_5: -8052622486533488067
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

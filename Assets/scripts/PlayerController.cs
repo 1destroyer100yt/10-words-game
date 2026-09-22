@@ -31,6 +31,14 @@ public class PlayerController : MonoBehaviour, IRunResettable
     public Vector2 Facing => visual != null ? (Vector2)visual.up : Vector2.up;
 
     static readonly int BoostParameter = Animator.StringToHash("Boost");
+    static readonly int SprintParameter = Animator.StringToHash("Sprint");
+    static readonly int CaughtParameter = Animator.StringToHash("Caught");
+
+    // Sprint and Caught exist only when their strips were built into the animator; setting a
+    // parameter an animator lacks logs a warning every frame, so look once.
+    RuntimeAnimatorController checkedController;
+    bool hasSprint, hasCaught;
+    GameRun subscribedTo;
 
     Rigidbody2D body;
     InputAction moveAction;
@@ -60,10 +68,50 @@ public class PlayerController : MonoBehaviour, IRunResettable
     void OnDisable()
     {
         if (actions != null) actions.Disable();
+        if (subscribedTo != null) subscribedTo.Caught -= OnCaught;
+        subscribedTo = null;
+    }
+
+    void Subscribe()
+    {
+        GameRun run = GameRun.Instance;
+        if (run == null || run == subscribedTo) return;
+        if (subscribedTo != null) subscribedTo.Caught -= OnCaught;
+        subscribedTo = run;
+        run.Caught += OnCaught;
+    }
+
+    /// <summary>
+    /// The death plays on real time: the caught sequence slows the game to a crawl and then freezes
+    /// it, and on game time the whole animation would be one frame.
+    /// </summary>
+    void OnCaught()
+    {
+        if (animator == null || !CheckParameters()) return;
+        if (!hasCaught) return;
+        animator.updateMode = AnimatorUpdateMode.UnscaledTime;
+        animator.SetBool(CaughtParameter, true);
+    }
+
+    /// <summary>True when there is a controller to talk to; refreshes the parameter check if it changed.</summary>
+    bool CheckParameters()
+    {
+        RuntimeAnimatorController current = animator.runtimeAnimatorController;
+        if (current == null) return false;
+        if (current == checkedController) return true;
+        checkedController = current;
+        hasSprint = hasCaught = false;
+        foreach (AnimatorControllerParameter parameter in animator.parameters)
+        {
+            if (parameter.nameHash == SprintParameter) hasSprint = true;
+            if (parameter.nameHash == CaughtParameter) hasCaught = true;
+        }
+        return true;
     }
 
     void Update()
     {
+        Subscribe();
         GameRun run = GameRun.Instance;
         bool active = movementEnabled && (run == null || run.AcceptsGameplayInput);
         moveInput = active ? ReadMove() : Vector2.zero;
@@ -77,9 +125,10 @@ public class PlayerController : MonoBehaviour, IRunResettable
             visual.rotation = Quaternion.Euler(0f, 0f, angle);
         }
 
-        if (animator != null && animator.runtimeAnimatorController != null)
+        if (animator != null && CheckParameters())
         {
             animator.SetBool(BoostParameter, moving);
+            if (hasSprint) animator.SetBool(SprintParameter, moving && sprinting);
         }
     }
 
@@ -102,6 +151,13 @@ public class PlayerController : MonoBehaviour, IRunResettable
         }
         transform.position = spawnPosition;
         if (visual != null) visual.rotation = spawnFacing;
+
+        // Back from the death pose to a hovering player on game time.
+        if (animator != null && CheckParameters())
+        {
+            if (hasCaught) animator.SetBool(CaughtParameter, false);
+            animator.updateMode = AnimatorUpdateMode.Normal;
+        }
     }
 
     Vector2 ReadMove()

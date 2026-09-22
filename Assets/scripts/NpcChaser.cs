@@ -61,6 +61,27 @@ public class NpcChaser : MonoBehaviour, IRunResettable
     Vector3 spawn;
     Quaternion spawnRotation;
 
+    // The difficulty's hard tiers (DemonCount). Kept apart from chaseSpeed and detectTime, which the
+    // story director raises while the jewel is carried and puts back afterwards.
+    float chaseScale = 1f;
+    float wanderScale = 1f;
+    float detectScale = 1f;
+    float findBonus;
+    float searchBonus;
+
+    /// <summary>Sets how dangerous this demon is on the chosen difficulty. 1, 1, 1, 0, 0 is as built.</summary>
+    public void SetStrength(float chase, float wander, float detect, float findHidden, float searchExtra)
+    {
+        chaseScale = Mathf.Max(0.1f, chase);
+        wanderScale = Mathf.Max(0.1f, wander);
+        detectScale = Mathf.Max(0.05f, detect);
+        findBonus = Mathf.Max(0f, findHidden);
+        searchBonus = Mathf.Max(0f, searchExtra);
+        if (ai != null) ai.maxSpeed = SpeedFor(CurrentMode);
+    }
+
+    float SpeedFor(Mode mode) => mode == Mode.Wander ? wanderSpeed * wanderScale : chaseSpeed * chaseScale;
+
     void Awake()
     {
         ai = GetComponent<IAstarAI>();
@@ -69,6 +90,10 @@ public class NpcChaser : MonoBehaviour, IRunResettable
         spawn = transform.position;
         spawnRotation = transform.rotation;
         if (ai != null) wanderSpeed = ai.maxSpeed;
+
+        // A fast demon (the hard levels) swings wide round corners and its centre can end up inside
+        // a wall. Keep it on the walkable grid, which already stops an agent radius short of walls.
+        if (ai is AIPath path) path.constrainInsideGraph = true;
     }
 
     void OnEnable()
@@ -99,7 +124,7 @@ public class NpcChaser : MonoBehaviour, IRunResettable
 
         if (seen)
         {
-            Suspicion = Mathf.Min(1f, Suspicion + Time.deltaTime / Mathf.Max(0.01f, detectTime));
+            Suspicion = Mathf.Min(1f, Suspicion + Time.deltaTime / Mathf.Max(0.01f, detectTime * detectScale));
             if (CurrentMode != Mode.Suspicious) Enter(Mode.Suspicious);
             if (Suspicion >= 1f) Enter(Mode.Chase);
         }
@@ -124,12 +149,12 @@ public class NpcChaser : MonoBehaviour, IRunResettable
         {
             if (arrivedAt < 0f) arrivedAt = Time.time;
             if (hider != null && hider.IsHidden &&
-                Vector2.Distance(transform.position, hider.SpotPosition) <= hidingDiscoverRadius) // where it stands, not where it was sent
+                Vector2.Distance(transform.position, hider.SpotPosition) <= hidingDiscoverRadius + findBonus) // where it stands, not where it was sent
             {
                 Catch();
                 return;
             }
-            if (Time.time - arrivedAt >= searchTime) Enter(Mode.Wander);
+            if (Time.time - arrivedAt >= searchTime + searchBonus) Enter(Mode.Wander);
         }
         else if (Time.time - searchStarted > searchTimeout)
         {
@@ -185,7 +210,7 @@ public class NpcChaser : MonoBehaviour, IRunResettable
         bool wandering = mode == Mode.Wander;
         wanderer.enabled = wandering;
         ai.isStopped = mode == Mode.Suspicious;
-        ai.maxSpeed = wandering ? wanderSpeed : chaseSpeed;
+        ai.maxSpeed = SpeedFor(mode);
 
         switch (mode)
         {

@@ -39,6 +39,8 @@ public class MenuScreen : MonoBehaviour
     public Sprite pixel;
     [Tooltip("Small demon mark used for the difficulty pips.")]
     public Sprite demonMark;
+    [Tooltip("Mark for the hard levels past the last demon. Empty = the caught skull.")]
+    public Sprite hardMark;
     [Tooltip("A to Z, for the letters printed on the key caps.")]
     public Sprite[] letters;
     [Tooltip("0-9 then ':' and '.', for the best time under the prompt.")]
@@ -53,10 +55,17 @@ public class MenuScreen : MonoBehaviour
     public RunHud hud;
 
     [Header("Difficulty")]
-    [Tooltip("Demons in the building. Chosen here, spawned by DemonCount.")]
+    [Tooltip("The chosen level. Up to maxDemons it is how many demons wake; the levels after that " +
+             "wake them all and make them more dangerous (DemonCount's hard tiers).")]
     public int demons = 1;
     public int maxDemons = 3;
     public DemonCount demonCount;
+
+    /// <summary>Every level the selector offers: one per demon, then DemonCount's hard tiers.</summary>
+    int Levels => demonCount != null ? Mathf.Max(1, demonCount.Levels) : Mathf.Max(1, maxDemons);
+
+    /// <summary>How many of those levels are plain demon counts, drawn with the demon mark.</summary>
+    int DemonLevels => demonCount != null ? demonCount.demons.Count : maxDemons;
 
     public bool IsOpen { get; private set; }
 
@@ -107,8 +116,9 @@ public class MenuScreen : MonoBehaviour
             run.Won += OnWon;
             run.Restarted += OnRestarted;
         }
-        demons = Mathf.Clamp(PlayerPrefs.GetInt(DifficultyKey, demons), 1, Mathf.Max(1, maxDemons));
+        demons = Mathf.Clamp(PlayerPrefs.GetInt(DifficultyKey, demons), 1, Levels);
         if (run != null && run.wonIcon != null) gemMark = run.wonIcon.sprite;
+        if (hardMark == null && run != null && run.caughtIcon != null) hardMark = run.caughtIcon.sprite;
         var objective = FindAnyObjectByType<Objective>();
         if (objective != null && objective.exitSprite != null) exitMark = objective.exitSprite.sprite;
         storyDirector = FindAnyObjectByType<StoryDirector>(); // kept: the difficulty lock reads it
@@ -320,7 +330,7 @@ public class MenuScreen : MonoBehaviour
     void SetDemons(int count)
     {
         if (DifficultyLocked) return;
-        demons = Mathf.Clamp(count, 1, maxDemons);
+        demons = Mathf.Clamp(count, 1, Levels);
         PlayerPrefs.SetInt(DifficultyKey, demons);
         PlayerPrefs.Save();
         PaintPips();
@@ -411,10 +421,11 @@ public class MenuScreen : MonoBehaviour
         IsOpen = false;
         SetVisible(false);
         if (hud != null) hud.hidden = false;
-        bool difficultyChanged = demonCount != null && demonCount.Active != demons;
+        // The level, not the count: 3, 4 and 5 all wake three demons but are different games.
+        bool difficultyChanged = demonCount != null && demonCount.Level != demons;
         if (run != null) run.SetPaused(false);
         else Time.timeScale = 1f;
-        if (demonCount != null) demonCount.SetActiveDemons(demons);
+        if (demonCount != null) demonCount.SetLevel(demons);
 
         // Ordinary pause/resume preserves progress. A different difficulty starts a fresh run.
         if (run != null)
@@ -579,13 +590,16 @@ public class MenuScreen : MonoBehaviour
         float pip = Mathf.Min(Mathf.Clamp(h * 0.065f, 18f, 42f), w * 0.085f);
         float pipGap = pip * 0.45f;
         float y = menuArt != null ? -h * 0.10f : h * 0.04f;
-        float span = (maxDemons - 1) * (pip + pipGap);
+        int levels = Levels;
+        float span = (levels - 1) * (pip + pipGap);
 
-        pips = new Image[maxDemons];
-        for (int i = 0; i < maxDemons; i++)
+        pips = new Image[levels];
+        for (int i = 0; i < levels; i++)
         {
             float x = -span * 0.5f + i * (pip + pipGap);
-            pips[i] = Add(demonMark, hintColor, pip, pip, new Vector2(x, y));
+            // A demon face per demon, then a skull per hard level: more of them, then deadlier ones.
+            Sprite mark = i < DemonLevels || hardMark == null ? demonMark : hardMark;
+            pips[i] = Add(mark, hintColor, pip, pip, new Vector2(x, y));
             int count = i + 1;
             AddHotspot(pips[i], pip * 1.25f, pip * 1.4f, () => SetDemons(count));
         }

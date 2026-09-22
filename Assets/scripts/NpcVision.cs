@@ -19,6 +19,14 @@ public class NpcVision : MonoBehaviour, IRunResettable
 
     public float viewDistance = 12f;
 
+    /// <summary>
+    /// Added to viewDistance by the difficulty's hard tiers (DemonCount). Separate, because the story
+    /// director sets viewDistance itself while the jewel is carried.
+    /// </summary>
+    [HideInInspector] public float bonusDistance;
+
+    float Reach => viewDistance + bonusDistance;
+
     [Tooltip("Rays across the cone; more rays hug walls more closely.")]
     [Range(3, 90)]
     public int rayCount = 30;
@@ -95,7 +103,7 @@ public class NpcVision : MonoBehaviour, IRunResettable
         Vector2 origin = transform.position;
         Vector2 toTarget = (Vector2)target.position - origin;
         float distance = toTarget.magnitude;
-        if (distance > viewDistance) return false;
+        if (distance > Reach) return false;
         if (distance > 0.001f && Vector2.Angle(transform.up, toTarget) > viewAngle * 0.5f) return false;
 
         return Physics2D.Linecast(origin, target.position, wallMask).collider == null;
@@ -115,8 +123,8 @@ public class NpcVision : MonoBehaviour, IRunResettable
             Vector3 localDirection = Quaternion.Euler(0f, 0f, angle) * Vector3.up;
             Vector2 worldDirection = transform.TransformDirection(localDirection);
 
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, worldDirection, viewDistance, wallMask);
-            float length = hit.collider != null ? hit.distance : viewDistance;
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, worldDirection, Reach, wallMask);
+            float length = hit.collider != null ? hit.distance : Reach;
 
             vertices[i + 1] = localDirection * length; // parents are unscaled, so local units are world units
             colors[i + 1] = color;

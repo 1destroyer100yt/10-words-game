@@ -1,31 +1,31 @@
 fileFormatVersion: 2
-guid: a7cf08c09635e154ba6b0eb2d072bac0
+guid: 4d4962713338f6a499a31bdcfd66e4c5
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4897042449467083221
-    second: idle player_0
+      213: -6025394915404536304
+    second: caught player_0
   - first:
-      213: 8607090098627951332
-    second: idle player_1
+      213: -7593228412740524957
+    second: caught player_1
   - first:
-      213: -8731189202132023760
-    second: idle player_2
+      213: -205767530828205451
+    second: caught player_2
   - first:
-      213: -7139586583296837981
-    second: idle player_3
+      213: -3259122786434208256
+    second: caught player_3
   - first:
-      213: -3793012827826718466
-    second: idle player_4
+      213: 141368083371840860
+    second: caught player_4
   - first:
-      213: -188127521760711914
-    second: idle player_5
+      213: -7439621021631089496
+    second: caught player_5
   - first:
-      213: -3872014048437071945
-    second: idle player_6
+      213: 5354933056503310264
+    second: caught player_6
   - first:
-      213: 5329992968873248989
-    second: idle player_7
+      213: -8116136273886977794
+    second: caught player_7
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -136,7 +136,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: idle player_0
+      name: caught player_0
       rect:
         serializedVersion: 2
         x: 0
@@ -151,14 +151,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 03b2e1abede9af84d9e03818989da83d
-      internalID: 4897042449467083221
+      spriteID: 3e54a5ec7a36f6a4c8338d10f5d79b07
+      internalID: -6025394915404536304
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_1
+      name: caught player_1
       rect:
         serializedVersion: 2
         x: 100
@@ -173,14 +173,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c5054b6e953e81043bdf14cce858e7ec
-      internalID: 8607090098627951332
+      spriteID: 9e9d07496d6f3ca4bb081c259a6059e1
+      internalID: -7593228412740524957
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_2
+      name: caught player_2
       rect:
         serializedVersion: 2
         x: 200
@@ -195,14 +195,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b644affaa2ad0eb41a71479b96486009
-      internalID: -8731189202132023760
+      spriteID: 9314b30a2b5f4e54384474a0a99f3099
+      internalID: -205767530828205451
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_3
+      name: caught player_3
       rect:
         serializedVersion: 2
         x: 300
@@ -217,14 +217,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: fb224a5fce1c7774f8a2e797e817aa76
-      internalID: -7139586583296837981
+      spriteID: 667d11d0e4cd2ed448e43a9bdb019892
+      internalID: -3259122786434208256
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_4
+      name: caught player_4
       rect:
         serializedVersion: 2
         x: 400
@@ -239,14 +239,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 1b6942062ba5da743b63fd09efae236d
-      internalID: -3793012827826718466
+      spriteID: f1cf4e6b36b4cb6449f5c22af0319285
+      internalID: 141368083371840860
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_5
+      name: caught player_5
       rect:
         serializedVersion: 2
         x: 500
@@ -261,14 +261,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: aa030ae4abfbd6948bba4ef9f97f4617
-      internalID: -188127521760711914
+      spriteID: 842478abf5d20bb42967f5b9b1fd0085
+      internalID: -7439621021631089496
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_6
+      name: caught player_6
       rect:
         serializedVersion: 2
         x: 600
@@ -283,14 +283,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 603e261c9da89c945aba4f5e50d02c15
-      internalID: -3872014048437071945
+      spriteID: b688ef84bb440b14ea4ed49ff6114a32
+      internalID: 5354933056503310264
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: idle player_7
+      name: caught player_7
       rect:
         serializedVersion: 2
         x: 700
@@ -305,8 +305,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 8506409c73f76a745bdd9247ee0ed184
-      internalID: 5329992968873248989
+      spriteID: d5293764d50389c46a9faeb5a7b5c909
+      internalID: -8116136273886977794
       vertices: []
       indices: 
       edges: []
@@ -315,7 +315,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: a0e74579dc9516547b404739ee61e0cf
+    spriteID: 4419a73b987e2c94fb52a16d4e0aff47
     internalID: 0
     vertices: []
     indices: 
@@ -325,14 +325,14 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      idle player_0: 4897042449467083221
-      idle player_1: 8607090098627951332
-      idle player_2: -8731189202132023760
-      idle player_3: -7139586583296837981
-      idle player_4: -3793012827826718466
-      idle player_5: -188127521760711914
-      idle player_6: -3872014048437071945
-      idle player_7: 5329992968873248989
+      caught player_0: -6025394915404536304
+      caught player_1: -7593228412740524957
+      caught player_2: -205767530828205451
+      caught player_3: -3259122786434208256
+      caught player_4: 141368083371840860
+      caught player_5: -7439621021631089496
+      caught player_6: 5354933056503310264
+      caught player_7: -8116136273886977794
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
