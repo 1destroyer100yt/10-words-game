@@ -25,6 +25,9 @@ public class NpcVision : MonoBehaviour, IRunResettable
     /// </summary>
     [HideInInspector] public float bonusDistance;
 
+    [Tooltip("Sees nothing and draws no cone: the Listener hunts by sound alone.")]
+    public bool blind;
+
     float Reach => viewDistance + bonusDistance;
 
     [Tooltip("Rays across the cone; more rays hug walls more closely.")]
@@ -80,6 +83,13 @@ public class NpcVision : MonoBehaviour, IRunResettable
         // cone behind them is the most expensive thing in the frame.
         GameRun run = GameRun.Instance;
         if (run != null && !run.IsRunning) return;
+
+        if (blind)
+        {
+            CanSeeTarget = false;
+            if (mesh.vertexCount > 0) mesh.Clear();
+            return;
+        }
 
         CanSeeTarget = Sense();
         if (CanSeeTarget)

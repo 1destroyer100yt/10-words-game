@@ -117,6 +117,7 @@ public class MenuScreen : MonoBehaviour
             run.Restarted += OnRestarted;
         }
         demons = Mathf.Clamp(PlayerPrefs.GetInt(DifficultyKey, demons), 1, Levels);
+        if (run != null) run.SetLevel(demons); // each difficulty has its own best time and best win
         if (run != null && run.wonIcon != null) gemMark = run.wonIcon.sprite;
         if (hardMark == null && run != null && run.caughtIcon != null) hardMark = run.caughtIcon.sprite;
         var objective = FindAnyObjectByType<Objective>();
@@ -129,6 +130,7 @@ public class MenuScreen : MonoBehaviour
             if (storyDirector.activatorBody != null) activatorMark = storyDirector.activatorBody.sprite;
         }
         SoundSettings.Apply();
+        GraphicsQuality.Apply();
         Open();
     }
 
@@ -153,6 +155,7 @@ public class MenuScreen : MonoBehaviour
         }
 
         Breathe();
+        BlinkResult();
         Hover();
 
         // A short grace period stops the click that opened the page from skipping the menu instantly.
@@ -211,6 +214,11 @@ public class MenuScreen : MonoBehaviour
         if (keyboard != null && keyboard.fKey.wasPressedThisFrame)
         {
             ToggleFullscreen();
+            return true;
+        }
+        if (keyboard != null && keyboard.qKey.wasPressedThisFrame)
+        {
+            CycleQuality();
             return true;
         }
 
@@ -309,7 +317,54 @@ public class MenuScreen : MonoBehaviour
 
     // After the ending the run restarts on its own. Bring the title back, so there is a clear
     // moment to play again, change the difficulty or quit, instead of a new run already under way.
-    void OnWon() => reopenAfterWin = true;
+    void OnWon()
+    {
+        reopenAfterWin = true;
+        showResult = true; // the title that comes back shows how that run went
+    }
+
+    bool showResult;
+    readonly List<Image> resultDigits = new List<Image>();
+
+    /// <summary>
+    /// After a win: the gem and the run's time, large, where the objective strip usually sits. A new
+    /// record for this difficulty blinks and gets an up arrow; otherwise the time is grey and the red
+    /// record underneath says what there is to beat. No words, only the game's own digits.
+    /// </summary>
+    void BuildResult(float h)
+    {
+        resultDigits.Clear();
+        if (digits == null || digits.Length < 12 || run == null || run.LastWinSeconds <= 0f) return;
+
+        float cell = Mathf.Min(Mathf.Clamp(h * 0.05f, 14f, 38f), root.rect.width * 0.045f);
+        float y = -h * 0.355f;
+        string text = RunHud.Format(run.LastWinSeconds);
+        bool record = run.LastWinWasRecord;
+        float width = (text.Length + (record ? 3.4f : 2f)) * cell;
+        float start = -width * 0.5f + cell * 0.5f;
+
+        if (gemMark != null) Add(gemMark, markColor, cell, cell, new Vector2(start, y));
+        Color color = record ? markColor : hintColor;
+        for (int i = 0; i < text.Length; i++)
+        {
+            Sprite glyph = Digit(text[i]);
+            if (glyph == null) continue;
+            resultDigits.Add(Add(glyph, color, cell, cell, new Vector2(start + (i + 2) * cell, y)));
+        }
+        if (record && arrowRight != null)
+            resultDigits.Add(Add(arrowRight, markColor, cell * 0.6f, cell * 0.95f,
+                new Vector2(start + (text.Length + 2.6f) * cell, y), 90f));
+    }
+
+    void BlinkResult()
+    {
+        if (!showResult || run == null || !run.LastWinWasRecord) return;
+        bool on = Mathf.Repeat(Time.unscaledTime, 0.8f) < 0.5f;
+        foreach (Image part in resultDigits)
+        {
+            if (part != null) part.color = on ? markColor : hintColor;
+        }
+    }
 
     void OnRestarted()
     {
@@ -332,6 +387,7 @@ public class MenuScreen : MonoBehaviour
         if (DifficultyLocked) return;
         demons = Mathf.Clamp(count, 1, Levels);
         PlayerPrefs.SetInt(DifficultyKey, demons);
+        if (run != null) run.SetLevel(demons); // the records under the title follow the selector
         PlayerPrefs.Save();
         PaintPips();
     }
@@ -418,6 +474,7 @@ public class MenuScreen : MonoBehaviour
     public void Close()
     {
         if (!IsOpen) return;
+        showResult = false; // shown once, on the title that follows the ending
         IsOpen = false;
         SetVisible(false);
         if (hud != null) hud.hidden = false;
@@ -475,6 +532,7 @@ public class MenuScreen : MonoBehaviour
             if (spot.rect == null || spot.image == null) continue;
             if (spot.image == soundImage) continue; // the sound switch shows its state, not the pointer
             if (spot.image == volumeTrack) continue; // so does the volume slider
+            if (qualityBars != null && spot.image == qualityBars[1]) continue; // and the quality bars
             if (fullscreenParts != null && spot.image == fullscreenParts[0])
             {
                 bool overFullscreen = RectTransformUtility.RectangleContainsScreenPoint(spot.rect, point, null);
@@ -605,6 +663,10 @@ public class MenuScreen : MonoBehaviour
         }
         PaintPips();
 
+        // Locked once a clue is solved (see DifficultyLocked). Arrows that light up and then do nothing
+        // read as broken, so leave them off until the building starts over. The menu rebuilds on open.
+        if (DifficultyLocked) return;
+
         float arrowHeight = pip * 1.15f;
         float arrowWidth = arrowHeight * 9f / 14f; // the art is 9 x 14
         float reach = span * 0.5f + pip * 0.5f + arrowWidth * 0.5f + pip * 0.55f;
@@ -728,6 +790,9 @@ public class MenuScreen : MonoBehaviour
         float mark = height * 1.05f;
         bool hasFullscreen = frameCorner != null;
         float rowLeft = hasFullscreen ? trackLeft - gap - mark : trackLeft;
+        bool hasQuality = pixel != null;
+        float qualityX = rowLeft - gap - mark * 0.5f;
+        if (hasQuality) rowLeft -= gap + mark;
         float rowRight = speakerAt.x + width * 0.5f;
         float pad = height * 0.45f;
         ButtonFrame(new Vector2((rowLeft + rowRight) * 0.5f, trackY),
@@ -746,12 +811,47 @@ public class MenuScreen : MonoBehaviour
         PaintVolume();
         AddHotspot(volumeTrack, trackWidth + knob * 2f, height * 1.6f, BeginVolumeDrag);
 
+        // Quality: three rising bars, lit up to the chosen level, like a signal meter.
+        if (hasQuality)
+        {
+            Vector2 qualityAt = new Vector2(qualityX, trackY);
+            float barWidth = mark * 0.22f;
+            float bottom = trackY - mark * 0.42f;
+            qualityBars = new Image[GraphicsQuality.Levels];
+            for (int i = 0; i < qualityBars.Length; i++)
+            {
+                float barHeight = mark * (0.36f + 0.24f * i);
+                float x = qualityAt.x + (i - 1) * barWidth * 1.6f;
+                qualityBars[i] = Add(pixel, hintColor, barWidth, barHeight, new Vector2(x, bottom + barHeight * 0.5f));
+            }
+            PaintQuality();
+            AddHotspot(qualityBars[1], mark * 1.5f, height * 1.6f, CycleQuality);
+            hotspots[hotspots.Count - 1].rect.anchoredPosition = qualityAt;
+        }
+
         // Fullscreen: four corner brackets pointing out, or pointing in once already fullscreen.
         if (!hasFullscreen) return;
         Vector2 markAt = new Vector2(trackLeft - gap - mark * 0.5f, trackY);
         fullscreenParts = FullscreenMark(markAt, mark, Screen.fullScreen);
         AddHotspot(fullscreenParts[0], mark * 1.7f, height * 1.6f, ToggleFullscreen);
         hotspots[hotspots.Count - 1].rect.anchoredPosition = markAt;
+    }
+
+    Image[] qualityBars;
+
+    void CycleQuality()
+    {
+        GraphicsQuality.Cycle();
+        PaintQuality();
+    }
+
+    void PaintQuality()
+    {
+        if (qualityBars == null) return;
+        for (int i = 0; i < qualityBars.Length; i++)
+        {
+            if (qualityBars[i] != null) qualityBars[i].color = i <= GraphicsQuality.Level ? markColor : hintColor;
+        }
     }
 
     void BeginVolumeDrag()
@@ -805,7 +905,8 @@ public class MenuScreen : MonoBehaviour
         AddHotspot(quitImage, buttonWidth, buttonHeight, GameExit.Quit);
         quitTarget = hotspots[hotspots.Count - 1].rect;
         quitTarget.anchoredPosition = new Vector2(offset, y);
-        if (h >= 360f) BuildObjective(w, h, -0.355f);
+        if (showResult) BuildResult(h);
+        else if (h >= 360f) BuildObjective(w, h, -0.355f);
         BuildBestTime(h);
         BuildSound(w * 0.5f, h * 0.5f, h);
         float inset = Mathf.Clamp(h * 0.09f, 40f, 76f);

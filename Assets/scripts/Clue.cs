@@ -23,6 +23,18 @@ public class Clue : MonoBehaviour
 
     public bool Solved { get; private set; }
 
+    /// <summary>
+    /// True once the player has been within sight of it. Until then its minimap mark stays hidden:
+    /// the map tells you which wings are left, not where in them to look.
+    /// </summary>
+    public bool Revealed { get; private set; }
+
+    public void SetRevealed(bool revealed)
+    {
+        Revealed = revealed;
+        if (marker != null) marker.enabled = revealed && !Solved;
+    }
+
     /// <summary>0..1, how long the player has been standing on it. The director drives this.</summary>
     public float Progress { get; set; }
 
@@ -35,7 +47,7 @@ public class Clue : MonoBehaviour
     {
         Solved = solved;
         Progress = 0f;
-        if (marker != null) marker.enabled = !solved;
+        if (marker != null) marker.enabled = !solved && Revealed;
         if (body != null) body.color = solved ? dormantColor : armedColor;
     }
 

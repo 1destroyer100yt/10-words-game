@@ -140,8 +140,8 @@ public class GameAudio : MonoBehaviour
         HeartBeat?.Invoke(closeness);
     }
     /// <summary>
-    /// Footstep ticks while the player moves, quicker while sprinting. Sound only: demons do not
-    /// hear them.
+    /// Footstep ticks while the player moves, quicker while sprinting. Sound only; what demons hear
+    /// is PlayerController's sprint noise.
     /// </summary>
     void Footsteps()
     {

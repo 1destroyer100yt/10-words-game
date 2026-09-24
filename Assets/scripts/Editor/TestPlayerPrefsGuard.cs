@@ -54,6 +54,13 @@ public static class TestPlayerPrefsGuard
         var run = Object.FindAnyObjectByType<GameRun>();
         string best = run != null ? run.bestTimeKey : "Floorplan.BestTime";
         string win = run != null ? run.bestWinKey : "Floorplan.BestWin";
-        return new[] { best, win };
+        // Every difficulty keeps its own pair (GameRun.KeyFor); cover more levels than exist.
+        var keys = new System.Collections.Generic.List<string>();
+        for (int level = 1; level <= 9; level++)
+        {
+            keys.Add(GameRun.KeyFor(best, level));
+            keys.Add(GameRun.KeyFor(win, level));
+        }
+        return keys.ToArray();
     }
 }

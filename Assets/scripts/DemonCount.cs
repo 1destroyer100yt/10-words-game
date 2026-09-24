@@ -42,6 +42,12 @@ public class DemonCount : MonoBehaviour, IRunResettable
     [Tooltip("Objects belonging to each demon that live outside it, such as its suspicion indicator.")]
     public List<GameObject> attachments = new List<GameObject>();
 
+    [Tooltip("Demons that only wake on the hard levels (past the last plain demon count): the Listener.")]
+    public List<GameObject> hardOnly = new List<GameObject>();
+
+    [Tooltip("Their attachments, such as the suspicion indicator, in the same order.")]
+    public List<GameObject> hardOnlyAttachments = new List<GameObject>();
+
     [Tooltip("Levels past the last demon, easiest first. Every demon is awake on these.")]
     public Tier[] hardTiers =
     {
@@ -74,7 +80,18 @@ public class DemonCount : MonoBehaviour, IRunResettable
 
         int tier = Level - demons.Count; // 1 is the first hard tier
         Tier strength = hardTiers != null && tier >= 1 && tier <= hardTiers.Length ? hardTiers[tier - 1] : Built;
-        foreach (GameObject demon in demons)
+
+        bool hard = tier >= 1;
+        for (int i = 0; i < hardOnly.Count; i++)
+        {
+            if (hardOnly[i] != null && hardOnly[i].activeSelf != hard) hardOnly[i].SetActive(hard);
+            if (i < hardOnlyAttachments.Count && hardOnlyAttachments[i] != null && hardOnlyAttachments[i].activeSelf != hard)
+                hardOnlyAttachments[i].SetActive(hard);
+        }
+
+        var everyone = new List<GameObject>(demons);
+        everyone.AddRange(hardOnly);
+        foreach (GameObject demon in everyone)
         {
             if (demon == null) continue;
             var chaser = demon.GetComponent<NpcChaser>();

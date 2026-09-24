@@ -17,8 +17,15 @@ public class RunHud : MonoBehaviour
 
     public int cellPixels = 5;
 
-    [Tooltip("Screen pixels per glyph pixel.")]
+    [Tooltip("Screen pixels per glyph pixel at a 720-pixel-tall window.")]
     public int scale = 5;
+
+    [Tooltip("Grow and shrink with the window, so the clock is the same share of the screen at any size.")]
+    public bool scaleWithWindow = true;
+
+    int PixelScale => scaleWithWindow
+        ? Mathf.Clamp(Mathf.RoundToInt(scale * Screen.height / 720f), 2, scale * 2)
+        : scale;
 
     [Tooltip("Gap in screen pixels below the minimap and between the rows.")]
     public float gap = 6f;
@@ -55,7 +62,7 @@ public class RunHud : MonoBehaviour
             return;
         }
 
-        float cell = cellPixels * scale;
+        float cell = cellPixels * PixelScale;
         Vector2 anchor = TopRightAnchor();
 
         string time = Format(run.RunTime);
@@ -95,7 +102,7 @@ public class RunHud : MonoBehaviour
 
     void SetText(RectTransform row, List<Image> images, string text, Color color)
     {
-        float cell = cellPixels * scale;
+        float cell = cellPixels * PixelScale;
         while (images.Count < text.Length)
         {
             var go = new GameObject("Glyph", typeof(RectTransform), typeof(Image));

@@ -26,6 +26,9 @@ public class DecoyThrower : MonoBehaviour, IRunResettable
     public float coinLifetime = 8f;
     public float coinSize = 0.5f;
 
+    [Tooltip("A mouse click throws toward the pointer (up to range); Enter and the gamepad throw the way you face.")]
+    public bool aimWithMouse = true;
+
     [Tooltip("The coin sprite is a white template (the menu tints it grey), so the thrown coin is tinted here.")]
     public Color coinColor = new Color32(237, 28, 36, 255);
 
@@ -50,6 +53,11 @@ public class DecoyThrower : MonoBehaviour, IRunResettable
         if (attack != null) attack.Enable(); // ours to enable; see PlayerHider.OnEnable
     }
 
+    void OnDisable()
+    {
+        if (attack != null) attack.Disable();
+    }
+
     void Update()
     {
         GameRun run = GameRun.Instance;
@@ -66,9 +74,23 @@ public class DecoyThrower : MonoBehaviour, IRunResettable
         Vector2 origin = transform.position;
         Vector2 direction = controller.Facing;
         if (direction.sqrMagnitude < 0.001f) direction = Vector2.up;
+        float reach = range;
 
-        RaycastHit2D hit = Physics2D.Raycast(origin, direction, range, wallMask);
-        float distance = hit.collider != null ? Mathf.Max(0f, hit.distance - 0.4f) /* never past a close wall */ : range;
+        Mouse mouse = Mouse.current;
+        Camera view = Camera.main;
+        if (aimWithMouse && mouse != null && view != null && mouse.leftButton.wasPressedThisFrame)
+        {
+            Vector2 pointer = view.ScreenToWorldPoint(mouse.position.ReadValue());
+            Vector2 toPointer = pointer - origin;
+            if (toPointer.sqrMagnitude > 0.01f)
+            {
+                direction = toPointer.normalized;
+                reach = Mathf.Min(range, toPointer.magnitude); // land where you clicked, if it is in range
+            }
+        }
+
+        RaycastHit2D hit = Physics2D.Raycast(origin, direction, reach, wallMask);
+        float distance = hit.collider != null ? Mathf.Max(0f, hit.distance - 0.4f) /* never past a close wall */ : reach;
         Vector3 landing = origin + direction * distance;
 
         var coin = new GameObject("Coin");
@@ -95,7 +117,13 @@ public class DecoyThrower : MonoBehaviour, IRunResettable
         nextThrow = 0f;
     }
 
-    void SpawnRing(Vector3 at)
+    void SpawnRing(Vector3 at) => ShowNoise(at, noiseRadius);
+
+    /// <summary>
+    /// The red ring on the minimap that shows how far a noise carries. The coin uses it, and so does
+    /// running (PlayerController), so the player can see that running is loud.
+    /// </summary>
+    public void ShowNoise(Vector3 at, float radius)
     {
         if (ringSprite == null) return;
         var go = new GameObject("Noise Ring");
@@ -108,7 +136,7 @@ public class DecoyThrower : MonoBehaviour, IRunResettable
         renderer.sortingOrder = 90;
         if (spriteMaterial != null) renderer.sharedMaterial = spriteMaterial;
         var ring = go.AddComponent<NoiseRing>();
-        ring.radius = noiseRadius;
+        ring.radius = radius;
         ring.seconds = ringSeconds;
     }
 

@@ -35,6 +35,13 @@ public class GameRun : MonoBehaviour
     [Tooltip("Optional. Plays the opening and ending picture frames and gates the jewel behind the clues.")]
     public StoryDirector director;
 
+    [Tooltip("Seconds at the start of every run in which no demon can catch you, so one that happens " +
+             "to wander past the spawn cannot end a run before it starts.")]
+    public float catchGraceSeconds = 4f;
+
+    /// <summary>True during the first catchGraceSeconds of a run.</summary>
+    public bool InGrace => RunTime < catchGraceSeconds;
+
     [Tooltip("Hold still until the menu calls Begin. The menu sets this.")]
     public bool startPaused;
 
@@ -76,6 +83,12 @@ public class GameRun : MonoBehaviour
     public Image wonIcon;
     public float wonSeconds = 1.8f;
 
+    /// <summary>How long the last winning run took, for the title to show after the ending.</summary>
+    public float LastWinSeconds { get; private set; }
+
+    /// <summary>True when that run beat this difficulty's best win (or was the first).</summary>
+    public bool LastWinWasRecord { get; private set; }
+
     /// <summary>Runs won this session.</summary>
     public int Wins { get; private set; }
 
@@ -90,12 +103,46 @@ public class GameRun : MonoBehaviour
     bool beaten;
     bool begun;
 
+    /// <summary>
+    /// The difficulty level the records belong to. Level 1 keeps the original keys, so records saved
+    /// before levels existed stay where they were.
+    /// </summary>
+    public int Level { get; private set; } = 1;
+
+    public static string KeyFor(string baseKey, int level) => level <= 1 ? baseKey : baseKey + ".L" + level;
+    string TimeKey => KeyFor(bestTimeKey, Level);
+    string WinKey => KeyFor(bestWinKey, Level);
+
+    /// <summary>Switches the best time and best win shown and saved to this difficulty's own.</summary>
+    public void SetLevel(int level)
+    {
+        level = Mathf.Max(1, level);
+        if (level == Level) return;
+        SaveBest();
+        Level = level;
+        LoadBest();
+    }
+
+    // MenuScreen runs first (execution order -100) and may set the level before this Awake has
+    // loaded anything; saving then would write an empty record over a real one.
+    bool recordsLoaded;
+
+    void LoadBest()
+    {
+        recordsLoaded = true;
+        BestTime = PlayerPrefs.GetFloat(TimeKey, 0f);
+        beatable = BestTime;
+        beaten = false;
+        BestWin = PlayerPrefs.GetFloat(WinKey, 0f);
+    }
+
     void Awake()
     {
         Instance = this;
-        BestTime = PlayerPrefs.GetFloat(bestTimeKey, 0f);
-        beatable = BestTime;
-        BestWin = PlayerPrefs.GetFloat(bestWinKey, 0f);
+        // A* logs every calculated path, even in release builds: hundreds of browser console lines a
+        // minute. AstarPath's Awake runs first (execution order -10000), so it is already active here.
+        if (AstarPath.active != null) AstarPath.active.logPathResults = Pathfinding.PathLog.None;
+        LoadBest();
         if (startPaused) IsRunning = false;
         if (flash != null) flash.enabled = false;
         if (caughtIcon != null) caughtIcon.enabled = false;
@@ -168,7 +215,7 @@ public class GameRun : MonoBehaviour
     /// <summary>Ends the run: slow motion, red flash, icon, then restart.</summary>
     public void CatchPlayer(Component by)
     {
-        if (IsCaught || !IsRunning) return;
+        if (IsCaught || !IsRunning || InGrace) return;
         IsRunning = false;
         SaveBest();
         if (Debug.isDebugBuild) Debug.Log($"Player caught by {(by != null ? by.name : "unknown")} after {RunTime:F1} s.", this);
@@ -182,10 +229,12 @@ public class GameRun : MonoBehaviour
         if (IsCaught || !IsRunning) return;
         IsRunning = false;
         Wins++;
+        LastWinSeconds = RunTime;
+        LastWinWasRecord = BestWin <= 0f || RunTime < BestWin;
         if (BestWin <= 0f || RunTime < BestWin)
         {
             BestWin = RunTime;
-            PlayerPrefs.SetFloat(bestWinKey, BestWin);
+            PlayerPrefs.SetFloat(WinKey, BestWin);
         }
         SaveBest();
         if (Debug.isDebugBuild) Debug.Log($"Jewel carried out after {RunTime:F1} s. Wins this session: {Wins}.", this);
@@ -292,7 +341,8 @@ public class GameRun : MonoBehaviour
 
     void SaveBest()
     {
-        PlayerPrefs.SetFloat(bestTimeKey, BestTime);
+        if (!recordsLoaded) return;
+        PlayerPrefs.SetFloat(TimeKey, BestTime);
         PlayerPrefs.Save();
     }
 

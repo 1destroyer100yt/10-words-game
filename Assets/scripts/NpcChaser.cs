@@ -40,6 +40,9 @@ public class NpcChaser : MonoBehaviour, IRunResettable
     [Tooltip("A hidden player is found when the enemy searches within this distance of the hiding spot.")]
     public float hidingDiscoverRadius = 2.5f;
 
+    [Tooltip("Noises carry this many times further for this demon. The Listener, which is blind, hears best.")]
+    public float hearingMultiplier = 1f;
+
     public bool logStateChanges = true;
 
     public Mode CurrentMode { get; private set; }
@@ -111,6 +114,12 @@ public class NpcChaser : MonoBehaviour, IRunResettable
         if (ai == null || vision == null || vision.target == null) return;
         GameRun run = GameRun.Instance;
         if (run != null && !run.IsRunning) return;
+
+        // chaseSpeed can change in the middle of a chase (the story raises it when the jewel is taken),
+        // and Enter() was the only place that copied it into the agent.
+        float wantedSpeed = SpeedFor(CurrentMode);
+        if (!Mathf.Approximately(ai.maxSpeed, wantedSpeed)) ai.maxSpeed = wantedSpeed;
+
         ResolveHider();
 
         bool seen = vision.CanSeeTarget;
@@ -149,7 +158,8 @@ public class NpcChaser : MonoBehaviour, IRunResettable
         {
             if (arrivedAt < 0f) arrivedAt = Time.time;
             if (hider != null && hider.IsHidden &&
-                Vector2.Distance(transform.position, hider.SpotPosition) <= hidingDiscoverRadius + findBonus) // where it stands, not where it was sent
+                Vector2.Distance(transform.position, hider.SpotPosition) <= hidingDiscoverRadius + findBonus && // where it stands, not where it was sent
+                Physics2D.Linecast(transform.position, hider.SpotPosition, vision.wallMask).collider == null) // and not through a wall
             {
                 Catch();
                 return;
@@ -200,7 +210,7 @@ public class NpcChaser : MonoBehaviour, IRunResettable
     void OnNoise(Vector3 point, float radius)
     {
         if (!isActiveAndEnabled) return;
-        if (Vector2.Distance(transform.position, point) <= radius) Investigate(point);
+        if (Vector2.Distance(transform.position, point) <= radius * hearingMultiplier) Investigate(point);
     }
 
     void Enter(Mode mode, Vector3 point = default)
@@ -250,12 +260,14 @@ public class NpcChaser : MonoBehaviour, IRunResettable
     {
         Suspicion = 0f;
         arrivedAt = -1f;
-        if (ai != null)
-        {
-            ai.Teleport(spawn);
-            ai.destination = spawn;
-        }
+
+        // A demon the difficulty has kept switched off since the scene loaded never ran Awake: it has no
+        // agent and no saved spawn rotation yet, so there is nothing to put back.
+        if (ai == null) return;
+
+        ai.Teleport(spawn);
+        ai.destination = spawn;
         transform.rotation = spawnRotation;
-        if (ai != null && wanderer != null) Enter(Mode.Wander);
+        if (wanderer != null) Enter(Mode.Wander);
     }
 }

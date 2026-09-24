@@ -45,6 +45,7 @@ public class PlayerHider : MonoBehaviour, IRunResettable
 
     void OnDisable()
     {
+        if (interact != null) interact.Disable();
         if (subscribedTo != null) subscribedTo.Caught -= OnCaught;
         subscribedTo = null;
     }

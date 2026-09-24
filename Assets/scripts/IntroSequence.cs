@@ -25,6 +25,7 @@ public class IntroSequence : MonoBehaviour
     RectTransform skipTarget, nextTarget, backTarget;
     Image nextMark, skipMark;
     Image leftMouseButton;
+    readonly List<Image> shiftKey = new List<Image>();
     readonly List<Image> clueMarks = new List<Image>();
     readonly List<GameObject> crossedWings = new List<GameObject>();
     GameObject searchWing;
@@ -126,6 +127,7 @@ public class IntroSequence : MonoBehaviour
         if (stage != null) { stage.gameObject.SetActive(false); Destroy(stage.gameObject); }
         keys.Clear();
         leftMouseButton = null;
+        shiftKey.Clear();
         clueMarks.Clear();
         crossedWings.Clear();
         stage = Rect((RectTransform)transform, "Lesson " + (Lesson + 1), Vector2.zero, new Vector2(960, 600));
@@ -169,6 +171,7 @@ public class IntroSequence : MonoBehaviour
             Key('A', new Vector2(-48, -179));
             Key('S', new Vector2(0, -179));
             Key('D', new Vector2(48, -179));
+            ShiftKey(new Vector2(-136, -179));
         }
         else if (Lesson == 1)
         {
@@ -211,7 +214,19 @@ public class IntroSequence : MonoBehaviour
             leftMouseButton.color = Mathf.Repeat(elapsed, 0.7f) < 0.35f ? red : Color.black;
         if (Lesson == 0)
         {
-            actor.anchoredPosition = new Vector2(Mathf.Lerp(-250, 230, walk), 0);
+            // Walk the first part, then Shift lights and the figure runs, loud: red rings trail it.
+            bool running = t > 0.42f && t < 0.8f;
+            float x = t < 0.42f ? Mathf.Lerp(-250f, -70f, Mathf.SmoothStep(0f, 1f, t / 0.42f))
+                    : Mathf.Lerp(-70f, 230f, Mathf.Clamp01((t - 0.42f) / 0.3f));
+            actor.anchoredPosition = new Vector2(x, 0);
+            foreach (Image part in shiftKey) part.color = running ? red : grey;
+            noise.enabled = running;
+            if (running)
+            {
+                float pulse = Mathf.Repeat(elapsed, 0.5f) / 0.5f;
+                noise.rectTransform.anchoredPosition = actor.anchoredPosition;
+                noise.rectTransform.sizeDelta = Vector2.one * Mathf.Lerp(30f, 130f, pulse);
+            }
         }
         else if (Lesson == 1)
         {
@@ -333,6 +348,23 @@ public class IntroSequence : MonoBehaviour
         Line(p.x-w*.28f, p.y+height*.23f, p.x+w*.28f, p.y+height*.23f, grey, 3);
         Line(p.x-w*.28f, p.y+height*.1f, p.x+w*.28f, p.y+height*.1f, grey, 3);
         Line(p.x+w*.23f, p.y-height*.1f, p.x+w*.23f, p.y-height*.27f, red, 3);
+    }
+
+    /// <summary>
+    /// A wide key with an up arrow on it: the Shift symbol, drawn rather than spelled, because the
+    /// game's only words are the story's ten.
+    /// </summary>
+    void ShiftKey(Vector2 at)
+    {
+        const float w = 84f, h = 40f, edge = 3f;
+        shiftKey.Add(Graphic(stage, pixel, grey, at + new Vector2(0, h / 2 - edge / 2), new Vector2(w, edge)));
+        shiftKey.Add(Graphic(stage, pixel, grey, at - new Vector2(0, h / 2 - edge / 2), new Vector2(w, edge)));
+        shiftKey.Add(Graphic(stage, pixel, grey, at - new Vector2(w / 2 - edge / 2, 0), new Vector2(edge, h)));
+        shiftKey.Add(Graphic(stage, pixel, grey, at + new Vector2(w / 2 - edge / 2, 0), new Vector2(edge, h)));
+        Image head = Graphic(stage, arrow, grey, at + new Vector2(0, 4), new Vector2(14, 20));
+        head.rectTransform.localRotation = Quaternion.Euler(0, 0, 90); // the arrow art points right
+        shiftKey.Add(head);
+        shiftKey.Add(Graphic(stage, pixel, grey, at + new Vector2(0, -8), new Vector2(5, 10))); // its stem
     }
 
     void Key(char c, Vector2 position)

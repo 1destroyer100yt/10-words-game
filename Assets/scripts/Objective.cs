@@ -106,6 +106,16 @@ public class Objective : MonoBehaviour, IRunResettable
         PickedUp?.Invoke();
     }
 
+    /// <summary>
+    /// Moves where the jewel lies and where every reset puts it back. The story director calls this
+    /// when it deals a new layout; a jewel being carried stays in the player's hands until the reset.
+    /// </summary>
+    public void SetJewelHome(Vector3 at)
+    {
+        jewelHome = at;
+        if (!Carrying && jewel != null) jewel.position = at;
+    }
+
     /// <summary>Sets both gates and redraws. The story director calls this as the beats change.</summary>
     public void SetLocks(bool jewelLocked, bool wayOutLocked)
     {

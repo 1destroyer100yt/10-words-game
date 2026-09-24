@@ -241,6 +241,7 @@ public static partial class FloorplanSetup
         director.dormantColor = Grey;
         director.pipEmptyColor = Black;
 
+        director.wallMask = 1 << ctx.wallLayer;
         run.director = director;
         if (cards != null) cards.deferOpening = true; // the director lands it on the theft frame
 

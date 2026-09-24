@@ -62,6 +62,22 @@ public class StoryDirector : MonoBehaviour, IRunResettable
     public SpriteRenderer jewelSocket;
     public SpriteRenderer activatorSocket;
 
+    [Header("Finding the clues")]
+    [Tooltip("A clue's minimap mark appears once the player has been this close with nothing in between.")]
+    public float clueRevealRadius = 12f;
+
+    [Tooltip("Walls, for the line of sight above. Empty = the 'Walls' layer.")]
+    public LayerMask wallMask;
+
+    [Header("A new building every time")]
+    [Tooltip("On every fresh start (first run, after a win, a new difficulty) the jewel moves to a random " +
+             "wing other than the one you start in, and the clues and the key are dealt around it. A death " +
+             "keeps the layout.")]
+    public bool shuffleLayout = true;
+
+    [Tooltip("The key goes to a random wing at least this share as far (from the start and the jewel) as the furthest one.")]
+    [Range(0f, 1f)] public float keyDistanceShare = 0.7f;
+
     [Header("How close you must get before the jewel shows itself")]
     public float searchRevealRadius = 7f;
 
@@ -156,6 +172,160 @@ public class StoryDirector : MonoBehaviour, IRunResettable
 
         if (audioBank != null) heartDistance = audioBank.farDistance;
         if (effects != null) vignette = effects.baseIntensity;
+        if (wallMask == 0) wallMask = LayerMask.GetMask("Walls");
+        ReadWings();
+    }
+
+    // ------------------------------------------------------------------ the layout
+
+    /// <summary>Per wing, indexed like zoneCrosses: where its middle is on the map and a walkable spot in it.</summary>
+    Vector3[] wingCentre;
+    Vector3[] wingSpot;
+    bool[] wingKnown;
+    int builtJewelWing = -1;
+    int lastJewelWing = -1;
+    Vector3 playerSpawn;
+    bool spawnKnown;
+
+    /// <summary>
+    /// The builder placed a clue in five wings and the jewel in the sixth, and drew a cross over the
+    /// middle of every wing but the jewel's, where the search box sits instead. That is everything a
+    /// new layout needs, so it is read back from the scene rather than rebuilt.
+    /// </summary>
+    void ReadWings()
+    {
+        int count = zoneCrosses != null ? zoneCrosses.Length : 0;
+        wingCentre = new Vector3[count];
+        wingSpot = new Vector3[count];
+        wingKnown = new bool[count];
+        if (count == 0) return;
+
+        var claimed = new bool[count];
+        foreach (Clue clue in clues)
+        {
+            if (clue == null || clue.zone < 0 || clue.zone >= count) continue;
+            wingSpot[clue.zone] = clue.transform.position;
+            wingKnown[clue.zone] = true;
+            claimed[clue.zone] = true;
+        }
+        for (int i = 0; i < count; i++)
+        {
+            if (zoneCrosses[i] != null) wingCentre[i] = zoneCrosses[i].transform.position;
+            else if (!claimed[i] && builtJewelWing < 0) builtJewelWing = i;
+        }
+        if (builtJewelWing < 0 || objective == null || objective.jewel == null || searchBox == null) return;
+
+        wingCentre[builtJewelWing] = searchBox.transform.position;
+        wingSpot[builtJewelWing] = objective.jewel.position;
+        wingKnown[builtJewelWing] = true;
+
+        // That wing never needed a cross. Now any wing can be ruled out, so give it one: every wing
+        // is the same size, so a copy of another wing's cross fits exactly.
+        foreach (GameObject cross in zoneCrosses)
+        {
+            if (cross == null) continue;
+            GameObject copy = Instantiate(cross, cross.transform.parent);
+            copy.name = $"Crossed {builtJewelWing}";
+            copy.transform.position = wingCentre[builtJewelWing];
+            copy.SetActive(false);
+            zoneCrosses[builtJewelWing] = copy;
+            break;
+        }
+    }
+
+    /// <summary>Deals a new building: the jewel into one wing, a clue into each of the others, the key far from both.</summary>
+    void Shuffle()
+    {
+        if (!shuffleLayout || wingKnown == null || builtJewelWing < 0 || player == null) return;
+        int count = wingKnown.Length;
+
+        // Not the wing you start in: the search would be over before it began. The spawn is read once,
+        // because a fresh start after a win runs while the player is still standing at the exit.
+        if (!spawnKnown) { playerSpawn = player.position; spawnKnown = true; }
+        int startWing = NearestWing(playerSpawn);
+        var choices = new List<int>();
+        for (int i = 0; i < count; i++)
+        {
+            if (wingKnown[i] && i != startWing && zoneCrosses[i] != null) choices.Add(i);
+        }
+        if (choices.Count > 1) choices.Remove(lastJewelWing); // two runs in a row never match
+        if (choices.Count == 0) return;
+        int jewelWing = choices[Random.Range(0, choices.Count)];
+        lastJewelWing = jewelWing;
+
+        int next = 0;
+        for (int i = 0; i < count && next < clues.Length; i++)
+        {
+            if (i == jewelWing || !wingKnown[i]) continue;
+            Clue clue = clues[next++];
+            if (clue == null) continue;
+            clue.zone = i;
+            clue.transform.position = wingSpot[i];
+        }
+
+        if (searchBox != null) searchBox.transform.position = wingCentre[jewelWing];
+        if (objective != null) objective.SetJewelHome(wingSpot[jewelWing]);
+
+        // The key: somewhere that is a journey from both the way in and the jewel.
+        if (activator != null)
+        {
+            // Any wing nearly as far as the furthest will do, so the key moves about too.
+            var score = new float[count];
+            float best = -1f;
+            for (int i = 0; i < count; i++)
+            {
+                score[i] = -1f;
+                if (i == jewelWing || !wingKnown[i]) continue;
+                score[i] = Mathf.Min(Vector2.Distance(wingSpot[i], playerSpawn),
+                                     Vector2.Distance(wingSpot[i], wingSpot[jewelWing]));
+                best = Mathf.Max(best, score[i]);
+            }
+            var far = new List<int>();
+            for (int i = 0; i < count; i++)
+            {
+                if (score[i] >= 0f && score[i] >= best * keyDistanceShare) far.Add(i);
+            }
+            if (far.Count > 0) activator.position = wingSpot[far[Random.Range(0, far.Count)]];
+        }
+    }
+
+    int NearestWing(Vector3 at)
+    {
+        int nearest = -1;
+        float best = float.MaxValue;
+        for (int i = 0; i < wingCentre.Length; i++)
+        {
+            if (!wingKnown[i]) continue;
+            float distance = Vector2.Distance(wingCentre[i], at);
+            if (distance >= best) continue;
+            best = distance;
+            nearest = i;
+        }
+        return nearest;
+    }
+
+    /// <summary>A clue joins the map once you have had it in sight.</summary>
+    void RevealClues()
+    {
+        foreach (Clue clue in clues)
+        {
+            if (clue == null || clue.Revealed || clue.Solved) continue;
+            Vector2 from = player.position;
+            Vector2 to = clue.transform.position;
+            if (Vector2.Distance(from, to) > clueRevealRadius) continue;
+            if (Physics2D.Linecast(from, to, wallMask).collider != null) continue;
+            clue.SetRevealed(true);
+        }
+    }
+
+    /// <summary>A fresh building: a new layout and nothing found yet.</summary>
+    void NewBuilding()
+    {
+        Shuffle();
+        foreach (Clue clue in clues)
+        {
+            if (clue != null) clue.SetRevealed(false);
+        }
     }
 
     void OnEnable()
@@ -165,6 +335,7 @@ public class StoryDirector : MonoBehaviour, IRunResettable
 
     void Start()
     {
+        NewBuilding();
         Subscribe();
         Restore();
     }
@@ -263,6 +434,8 @@ public class StoryDirector : MonoBehaviour, IRunResettable
         // the locker for every demon to see. Hide it with you.
         if ((Current == Beat.Carrying || Current == Beat.Escaping) && jewelBody != null)
             jewelBody.enabled = !PlayerHidden();
+
+        if (Current == Beat.Clues) RevealClues();
 
         switch (Current)
         {
@@ -471,6 +644,7 @@ public class StoryDirector : MonoBehaviour, IRunResettable
             {
                 if (cross != null) cross.SetActive(false);
             }
+            NewBuilding();
         }
 
         Restore();

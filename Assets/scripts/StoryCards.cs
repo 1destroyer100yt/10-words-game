@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// The whole story, in ten words: "The Debt". You borrowed light from the devil and never paid it
+/// The whole story, in ten words. You borrowed the devil's light and never paid it back: the
+/// light around you is the loan, and the thing hunting you has come to take it back.
 /// back, the light around you is the loan, and the thing hunting you is collections.
 ///
 /// Each card shows once and never again, so the story is told across your first few runs and then

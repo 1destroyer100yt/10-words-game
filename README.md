@@ -53,5 +53,6 @@ colours: black, grey and red.
 
 The game's own code, art and audio are released under the [MIT License](LICENSE).
 
-`Assets/AstarPathfindingProject` is third-party and is not covered by that license. It is
-distributed under its own terms, which are included in that folder.
+`Assets/AstarPathfindingProject` is third-party and is not covered by that license. It is the free
+version of the A* Pathfinding Project by Aron Granberg, used under the Unity Asset Store Free License
+named in its `Readme.txt`.

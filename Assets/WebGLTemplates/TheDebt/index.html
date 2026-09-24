@@ -71,6 +71,7 @@
       companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
       productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
       productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+      autoSyncPersistentDataPath: true,
       devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2)
     }, value => { progress.value = value; }).then(instance => {
       loading.remove();

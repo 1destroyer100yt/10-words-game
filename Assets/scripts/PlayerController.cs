@@ -13,6 +13,15 @@ public class PlayerController : MonoBehaviour, IRunResettable
     public float moveSpeed = 8f;
     public float sprintMultiplier = 1.6f;
 
+    [Tooltip("Running is loud: demons within this many units come to look where you are. 0 = silent.")]
+    public float sprintNoiseRadius = 7f;
+
+    [Tooltip("Seconds between those noises while running.")]
+    public float sprintNoiseEvery = 0.5f;
+
+    float nextSprintNoise;
+    DecoyThrower noiseShower; // draws the same ring on the minimap as the coin
+
     [Tooltip("Degrees per second the visual turns toward the movement direction.")]
     public float turnSpeed = 720f;
 
@@ -62,12 +71,16 @@ public class PlayerController : MonoBehaviour, IRunResettable
         if (actions == null) return;
         moveAction = actions.FindAction("Player/Move");
         sprintAction = actions.FindAction("Player/Sprint");
-        actions.Enable();
+        // Only our own actions. PlayerHider and DecoyThrower enable theirs, and switching the whole
+        // asset off here would switch theirs off too.
+        moveAction?.Enable();
+        sprintAction?.Enable();
     }
 
     void OnDisable()
     {
-        if (actions != null) actions.Disable();
+        moveAction?.Disable();
+        sprintAction?.Disable();
         if (subscribedTo != null) subscribedTo.Caught -= OnCaught;
         subscribedTo = null;
     }
@@ -118,6 +131,15 @@ public class PlayerController : MonoBehaviour, IRunResettable
         sprinting = active && ReadSprint();
         bool moving = moveInput.sqrMagnitude > 0.0001f;
 
+        // The price of speed: every few steps, anything close enough hears you and comes to look.
+        if (moving && sprinting && sprintNoiseRadius > 0f && Time.time >= nextSprintNoise)
+        {
+            nextSprintNoise = Time.time + sprintNoiseEvery;
+            Decoy.Emit(transform.position, sprintNoiseRadius);
+            if (noiseShower == null) noiseShower = GetComponent<DecoyThrower>();
+            if (noiseShower != null) noiseShower.ShowNoise(transform.position, sprintNoiseRadius);
+        }
+
         if (moving && visual != null)
         {
             float target = Mathf.Atan2(moveInput.y, moveInput.x) * Mathf.Rad2Deg - 90f;
@@ -143,6 +165,7 @@ public class PlayerController : MonoBehaviour, IRunResettable
     {
         moveInput = Vector2.zero;
         sprinting = false;
+        nextSprintNoise = 0f;
         movementEnabled = true;
         if (body != null)
         {

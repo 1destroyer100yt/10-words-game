@@ -2,9 +2,9 @@ using UnityEngine;
 
 /// <summary>
 /// The game's whole soundtrack, written as samples at runtime so no audio files ship with it.
-/// Three voices, one per story beat: a wooden thunk like a cash drawer closing, two sawtooth
+/// Three voices, one per story beat: a wooden thunk like a door closing, two sawtooth
 /// notes climbing for the moment you are noticed, and one flat sine with no shine on it for
-/// the moment the debt is called in.
+/// the moment you are caught.
 /// </summary>
 public static class ProceduralTones
 {

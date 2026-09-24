@@ -504,3 +504,66 @@ Compiles (Roslyn). Not yet run in Unity: Story Test, Play Test and a look at the
 - Intro: teach running (wide keycap with an up-arrow, no letters). Recommended.
 - Optional: best times per difficulty level.
 - Owner's side: commit (scripts, scene, `Player.controller` and the three strips, title art, work folder), `git push --force-with-lease origin main` from their own terminal with no Pull origin first, itch page, a 630x500 version of their cover, the AI-disclosure answer.
+
+## 2026-09-24 — Running taught and made loud, start grace, per-level records, web build
+
+- The owner beat levels 4 and 5 and asked for: teach running, fix early deaths, make running loud, per-level best times, then a web build. All art by Claude (no Brent).
+- Intro lesson 1: a wide keycap with an up arrow (the Shift symbol, drawn, no letters) beside WASD. The figure walks, then Shift lights red and it runs, trailing red noise rings.
+- Running is loud: `PlayerController.sprintNoiseRadius` 7, every 0.5 s while moving with Shift, through `Decoy.Emit`, so nearby demons come to investigate. Sets 0 to turn it off.
+- Early deaths: `GameRun.catchGraceSeconds` 4. No catch in the first 4 s of a run (RunTime, which does not count the opening cutscene). Verified live: inside the window CatchPlayer is refused, outside it catches.
+- Per-level records: `GameRun.SetLevel` and `KeyFor`. Level 1 keeps the original keys, so existing records stay; levels 2-5 use `Floorplan.BestTime.L<n>` / `Floorplan.BestWin.L<n>`. The menu switches records with the selector. Guarded so the menu (which runs first) cannot save an empty record over a real one. The test PlayerPrefs guard now covers every level's keys.
+- Editor note: the first Story Test after the recompile hung with "There are no graphs in the scene" (Reload Domain is off, and play started before A* had loaded its graph). The saved graph is identical in every commit, loads fine on demand, and the rerun passed. Web builds start fresh and are unaffected.
+- Verified: Story Test 46/46, Play Test clean (0 wall samples), web build 11 MB in 5 min (wasm 8.2 MB), browser: title with five levels, a run starts, the hovering player, no console errors. Zip `Jewel-of-the-Devil-web-1.0.zip` sent to the owner.
+
+## Open at end of 2026-09-24
+
+- Owner's side: commit today's changes, itch page (cover 630x500, AI disclosure: yes for graphics), one full run on the itch page before publishing.
+
+## 2026-09-24 — External audit applied, web build 2.0
+
+Every claim was checked against the current code first; all held.
+- 1.1 A* path logging off: `GameRun.Awake` sets `logPathResults = None`, the builder does too, and the scene is saved with it. Browser run: 0 "Path Completed" / "Path Failed" lines (the old build logged ~150 in a minute).
+- 1.2 A demon already chasing now picks up the jewel speed-up: `NpcChaser.Update` re-applies `SpeedFor(CurrentMode)` every frame.
+- 1.3 No finding a hidden player through a wall: the locker check now needs a clear line (`vision.wallMask`).
+- 1.4 `autoSyncPersistentDataPath: true` in the page. Browser: no "Manual synchronization" warning; volume kept across a reload.
+- 1.5 Version 2.0; web build 11 MB in 5 min; zip `Jewel-of-the-Devil-web-2.0.zip`.
+- 2.1 `NpcChaser.ResetRun` returns early for a demon that never ran Awake. Checked on difficulty 1 with a forced restart: the two sleeping demons keep a valid rotation.
+- 2.2 PlayerController enables and disables only Move and Sprint; PlayerHider and DecoyThrower disable their own actions.
+- 2.3 Floorplan Read/Write off (the builder turns it back on for its own bake, then off again).
+- 3.1 The clock scales with the window (`RunHud.scaleWithWindow`). 3.2 `MinimapMarkerPulse` on the player's minimap dot (scene and builder). 3.3 No difficulty arrows while it is locked. 3.4 A mouse click aims the coin at the pointer (Enter and gamepad still throw the way you face). 3.5 was already done.
+- 4.1 `_Recovery`, `SampleScene` and `Welcome` moved to the Recycle Bin. The A* ExampleScenes and Documentation were left alone: the A* folder is never modified.
+- 4.2 Removed collab-proxy, iet-framework and visualscripting. Kept com.unity.ai.assistant (the editor connection Claude uses runs through it).
+- 4.4 "The Debt" removed from comments and the build log. The template and quit-function rename was skipped (six coordinated edits for no player-visible gain).
+- 4.5 README names the Asset Store Free License. Open question for the owner: whether that license allows A*'s source in a public repo.
+- Not done: 4.3 (FloorplanAutoBuild, harmless, left), 4.6 (Palette refactor, no behaviour change).
+- Verified: Story Test 46/46, Play Test clean on difficulty 1, browser checks above.
+
+## 2026-09-24 — Hidden clues on the map, a new building every run
+
+- Clue marks on the minimap are hidden until found: `Clue.Revealed` / `SetRevealed`, and `StoryDirector.RevealClues` reveals a clue once the player has been within `clueRevealRadius` (12) with no wall in between. A reveal lasts through deaths; a fresh building hides them all again. The clue itself on the floor is unlit red as before, so it is spotted on screen.
+- New layout on every fresh start (first run, after a win, a difficulty change; not after a death): `StoryDirector.Shuffle`. It reads the six wings back from the scene in Awake (clue spots, the jewel's spot, cross and search-box centres), so no rebuild was needed, and gives the jewel's original wing a copy of a cross. The jewel goes to a random wing other than the spawn's (and never the same wing twice in a row), the five clues fill the rest, and the key goes to a random wing at least `keyDistanceShare` (0.7) as far from the spawn and the jewel as the furthest. `Objective.SetJewelHome` moves the jewel and where resets put it. Off switch: `shuffleLayout`.
+- Bug caught while testing: the start wing was read from the player's current position, which after a win is the exit. The spawn is now recorded once.
+- Checked in play mode: 40 fresh deals gave 5 jewel wings and 9 jewel-and-key pairs, every spot walkable and reachable from the spawn, the key never on the jewel, no clue marks shown at the start of a building, and a clue revealed when approached. Story Test 46/46, Play Test clean. Not in a web build yet.
+
+## 2026-09-24 — Running noise ring, win result, quality setting; new demon art for review
+
+- Running shows its noise: `DecoyThrower.ShowNoise(at, radius)` (the coin's minimap ring, now public with a radius); PlayerController draws it each time running makes noise.
+- After a win the title shows the gem and that run's time in large digits where the objective strip sits. A new record for the level blinks and gets an up arrow; otherwise it is grey above the red record. `GameRun.LastWinSeconds` / `LastWinWasRecord`. Cleared when the next run starts.
+- Quality setting: `GraphicsQuality` (Low/Medium/High = render scale 0.5 / 0.75 / 1, Point upscaling so pixels stay sharp; the UI is an overlay and stays full size). All six Unity quality levels share one URP asset, so this is what actually changes cost. Three rising bars at the left of the settings row; click or Q cycles; saved like the volume; default High. In the editor it restores the URP asset when play ends (checked: the asset on disk is unchanged).
+- Verified: Story Test 46/46; screenshots of the title with the bars, Low quality in play with the noise ring, and the win result with the record arrow. The level-5 test records made while checking were deleted.
+- New demon, drawn by Claude (no Codex): "the Listener", blind, hunts by sound. Bat ears in place of horns, no eyes, a zigzag mouth, a ribbed black body, grey dithered smoke in place of the red flame. Ears act out the state: twitch (idle), cocked side to side (search), snapped up (alert), folded back (chase). Head and ears hand placed in `listener/draw_listener.py`; same 100x100 cells, three colours only. Sent to the owner for approval; not in the game.
+
+## 2026-09-24 — The Listener added (levels 4 and 5)
+
+- Owner approved the art and the behaviour. Strips in `Assets/Listener/` (own folder: excluded from the player-sheet search, and not matched by the enemy-strip search); drawing script kept in `Assets/work folder/listener-art/`.
+- Behaviour: `NpcVision.blind` (never sees, draws no cone) and `NpcChaser.hearingMultiplier` 1.6 (coins, clue solves and running reach it from 1.6x as far). It still catches on touch, and it still gets the hard tier's speed.
+- Levels: `DemonCount.hardOnly` / `hardOnlyAttachments`, woken only past the plain demon counts, so levels 1-3 are unchanged and 4-5 have three demons plus the Listener.
+- `Tools/Floorplan/Add Listener` (FloorplanSetup.Listener.cs) copies the last demon with its minimap dot, pathfinding and warning icon, gives it an AnimatorOverrideController of the shared demon animator with the Listener's clips, makes it blind with sharp hearing, and registers it; running it again replaces it. Build Scene calls the same step at the end, so a rebuild keeps it.
+- Bug caught: the first placement used the hint point unchecked, because the graph has no nodes in edit mode, and 82,30 is inside a wall. Add Listener now scans the graph first and uses the nearest floor in the main region: placed at 82,32, walkable and connected to the player (checked in play).
+- Checked in play on level 5: the Listener is awake, draws no cone, and a player standing 3 units in front of it for 2 s drew no suspicion; a noise 16 units away sent it searching while an ordinary demon 21 away ignored it. Story Test 46/46 (run on level 5, Listener awake); Play Test clean twice. Not in a web build yet (owner: web build tomorrow).
+
+## Open at end of 2026-09-24
+
+- Web build with today's work (hidden clues, shuffled layout, running noise ring, win result, quality setting, the Listener), then the browser checks and the zip.
+- Screenshots and a short GIF for the itch page, after the build.
+- Owner's side: commit today's work; the A* license question for the public repo; itch page; cover at 630x500.

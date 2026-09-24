@@ -256,7 +256,17 @@ public static partial class FloorplanSetup
             unlit = unlitMaterial,
         });
 
+        AddListener(); // the blind demon of the hard levels, when its strips are in Assets/Listener
+
         Undo.CollapseUndoOperations(undoGroup);
+
+        // Read/Write was only needed for the wall bake above; left on, the build keeps a second copy of
+        // the floorplan in memory. ConfigureFloorplanImporter turns it back on at the start of the next build.
+        if (AssetImporter.GetAtPath(mapPath) is TextureImporter mapImporter && mapImporter.isReadable)
+        {
+            mapImporter.isReadable = false;
+            mapImporter.SaveAndReimport();
+        }
 
         Scene scene = SceneManager.GetActiveScene();
         EditorSceneManager.MarkSceneDirty(scene);
@@ -444,6 +454,7 @@ public static partial class FloorplanSetup
     {
         GameObject go = CreateRoot(PathfinderName);
         var astar = go.AddComponent<AstarPath>();
+        astar.logPathResults = PathLog.None; // it logs every path, even in release builds
 
         // In edit mode AstarPath.Awake returns before initializing its data, so do it here.
         AstarPath.active = astar;
@@ -945,7 +956,7 @@ public static partial class FloorplanSetup
         {
             NpcMarkers.Add(CreateMinimapMarker(npc, MinimapMarkerColor, minimapLayer, material));
         }
-        if (player != null) CreateMinimapMarker(player, PlayerMarkerColor, minimapLayer, material);
+        if (player != null) CreateMinimapMarker(player, PlayerMarkerColor, minimapLayer, material).AddComponent<MinimapMarkerPulse>();
     }
 
     static GameObject CreateMinimapMarker(GameObject owner, Color color, int layer, Material material)
@@ -1072,6 +1083,7 @@ public static partial class FloorplanSetup
             string path = AssetDatabase.GUIDToAssetPath(guid);
             if (path.StartsWith("Assets/AstarPathfindingProject") || path.StartsWith("Assets/Welcome")) continue;
             if (path.StartsWith(EnemyFolder + "/")) continue; // enemy strips are named with state words too
+            if (path.StartsWith(ListenerFolder + "/")) continue; // and so are the Listener's
             var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             if (texture == null) continue;
 

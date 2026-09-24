@@ -696,7 +696,7 @@ public static partial class FloorplanSetup
         run.startPaused = true; // the menu decides when the first run starts
         menu.run = run;
 
-        Debug.Log("Floorplan: story \"The Debt\" wired. " +
+        Debug.Log("Floorplan: story wired. " +
                   $"\"{story.openingWords}\" / \"{story.spottedWords}\" / " +
                   $"\"{story.caughtWords}\" / \"{story.bestWords}\" = ten words, each shown once.");
         return canvasGo;
