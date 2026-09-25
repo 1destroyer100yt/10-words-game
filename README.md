@@ -12,8 +12,11 @@ colours: black, grey and red.
 
 ## How to play
 
-- Find the five marks scratched into the walls. Stand on one to solve it. Each one crosses a wing of
-  the building off your map. Solving one is loud, so the devils come to look.
+- Find the five marks scratched into the walls. They only appear on your map once you have seen
+  them. Stand on one to solve it. Each one crosses a wing of the building off your map. Solving one
+  is loud, so the devils come to look.
+- The building changes every time you start fresh: the Jewel, the marks and the key move to other
+  wings. Dying keeps what you have found.
 - When one wing is left, it is boxed in red on the map. Search it for the Jewel.
 - Taking the Jewel makes every devil faster and angrier, and reveals the portal key.
 - Bring the key back to the portal to fill its second socket, then escape.
@@ -25,13 +28,24 @@ colours: black, grey and red.
 | Action | Keyboard and mouse | Gamepad |
 |---|---|---|
 | Move | WASD or arrow keys | Left stick |
-| Run | Left Shift | Left stick press |
+| Run (loud: devils nearby hear it) | Left Shift | Left stick press |
 | Hide in a closet | E | North button |
-| Throw a coin to make a noise | Left click or Enter | West button |
+| Throw a coin to make a noise | Left click (lands where you click) or Enter (the way you face) | West button |
 | Pause | Esc | Start |
 | Restart the run | R | Select |
-| Mute, fullscreen (title and pause screen) | M, F | |
+| Mute, fullscreen, quality (title and pause screen) | M, F, Q | |
 | Volume down, up (title and pause screen) | - and = | LB, RB |
+
+The keys for moving, running, hiding and throwing can be changed: click the gear on the title or
+pause screen, click a key, then press the new one. The arrow keys, right Shift and the mouse click
+always work as well. The same panel sets the graphics quality (three bars: lower is smoother on weak
+machines).
+
+## Difficulty
+
+Five levels on the title screen. Levels 1 to 3 wake one, two or three demons. Levels 4 and 5 wake all
+three at greater strength, plus the Listener: a blind demon that cannot see you but hears coins,
+solved clues and running from much further away. Each level keeps its own best time and best win.
 
 ## Running it
 

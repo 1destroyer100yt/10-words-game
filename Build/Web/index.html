@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>Jewel of the Devil</title>
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #000; }
+    #unity-canvas { display: block; width: 100%; height: 100%; background: #000; outline: none; }
+    #loading { position: fixed; inset: 0; display: grid; place-content: center; gap: 32px; pointer-events: none; background: #000; }
+    .gem { width: 32px; height: 40px; background: #ed1c24; margin: auto; clip-path: polygon(20% 0,80% 0,100% 30%,50% 100%,0 30%); }
+    progress { appearance: none; width: min(200px, 60vw); height: 4px; border: 0; background: #464646; color: #ed1c24; }
+    progress::-webkit-progress-bar { background: #464646; }
+    progress::-webkit-progress-value { background: #ed1c24; }
+    progress::-moz-progress-bar { background: #ed1c24; }
+    #retry { display: none; background: #000; color: #ed1c24; border: 2px solid #464646; font: 32px monospace; padding: 12px 24px; pointer-events: auto; cursor: pointer; }
+    #retry:focus-visible { outline: 2px solid #ed1c24; outline-offset: 6px; }
+    #closed { display: none; position: fixed; inset: 0; place-content: center; gap: 40px; background: #000; }
+    #closed .door { width: 62px; height: 100px; border: 4px solid #464646; position: relative; margin: auto; }
+    #closed .door::after { content: ''; position: absolute; width: 6px; height: 14px; background: #ed1c24; right: 10px; top: 43px; }
+    #reopen { color: #ed1c24; background: #000; border: 2px solid #464646; font: 32px monospace; padding: 12px 32px; cursor: pointer; }
+    #reopen:focus-visible { outline: 2px solid #ed1c24; outline-offset: 6px; }
+  </style>
+</head>
+<body>
+  <canvas id="unity-canvas" width="1280" height="720" tabindex="0" aria-label="Jewel of the Devil"></canvas>
+  <div id="loading" role="status" aria-label="Loading game">
+    <div class="gem" aria-hidden="true"></div>
+    <progress id="progress" max="1" value="0" aria-label="Loading progress"></progress>
+    <button id="retry" aria-label="Game failed to load. Retry">&#8635;</button>
+  </div>
+  <div id="closed" role="status" aria-label="Game ended">
+    <div class="door" aria-hidden="true"></div>
+    <button id="reopen" aria-label="Start game again">&#9654;</button>
+  </div>
+  <script>
+    const canvas = document.querySelector('#unity-canvas');
+    const loading = document.querySelector('#loading');
+    const progress = document.querySelector('#progress');
+    const retry = document.querySelector('#retry');
+    retry.addEventListener('click', () => location.reload());
+    document.querySelector('#reopen').addEventListener('click', () => location.reload());
+    canvas.addEventListener('pointerdown', () => canvas.focus());
+    function failed(message) {
+      console.error(message);
+      loading.setAttribute('aria-label', 'Game failed to load');
+      progress.hidden = true;
+      retry.style.display = 'block';
+      retry.focus();
+    }
+    const loader = document.createElement('script');
+    loader.src = 'Build/Web.loader.js';
+    loader.onerror = () => failed('Could not load the Unity player.');
+    loader.onload = () => createUnityInstance(canvas, {
+      arguments: [],
+      dataUrl: 'Build/Web.data.unityweb',
+      frameworkUrl: 'Build/Web.framework.js.unityweb',
+      codeUrl: 'Build/Web.wasm.unityweb',
+      streamingAssetsUrl: 'StreamingAssets',
+      companyName: "Andrew",
+      productName: "Jewel of the Devil",
+      productVersion: "2.0",
+      autoSyncPersistentDataPath: true,
+      devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2)
+    }, value => { progress.value = value; }).then(instance => {
+      loading.remove();
+      canvas.focus();
+      window.quitDebtGame = () => {
+        window.quitDebtGame = () => {};
+        canvas.hidden = true;
+        canvas.style.display = 'none';
+        instance.Quit().then(() => {
+          document.querySelector('#closed').style.display = 'grid';
+          document.querySelector('#reopen').focus();
+        }).catch(error => {
+          console.error(error);
+          document.querySelector('#closed').style.display = 'grid';
+        });
+      };
+    }).catch(failed);
+    document.body.appendChild(loader);
+  </script>
+</body>
+</html>

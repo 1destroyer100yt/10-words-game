@@ -213,10 +213,14 @@ public class GameRun : MonoBehaviour
     }
 
     /// <summary>Ends the run: slow motion, red flash, icon, then restart.</summary>
+    /// <summary>What ended the last run, so its own scream can play.</summary>
+    public Component CaughtBy { get; private set; }
+
     public void CatchPlayer(Component by)
     {
         if (IsCaught || !IsRunning || InGrace) return;
         IsRunning = false;
+        CaughtBy = by;
         SaveBest();
         if (Debug.isDebugBuild) Debug.Log($"Player caught by {(by != null ? by.name : "unknown")} after {RunTime:F1} s.", this);
         Caught?.Invoke();

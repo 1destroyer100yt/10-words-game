@@ -63,6 +63,7 @@ public static class StartupSetup
             intro.arrow = Icon("ArrowRight");
             intro.clue = Icon("ClueMark");
             intro.activator = Icon("ActivatorMark");
+            intro.actions = AssetDatabase.LoadAssetAtPath<UnityEngine.InputSystem.InputActionAsset>("Assets/Settings/InputSystem_Actions.inputactions");
             intro.letters = AssetDatabase.LoadAllAssetsAtPath("Assets/Floorplan/Icons/Letters.png")
                 .OfType<Sprite>().OrderBy(s => GlyphIndex(s.name)).ToArray();
             if (intro.pixel == null || intro.gem == null || intro.letters.Length != 26)

@@ -11,6 +11,9 @@ public class IntroSequence : MonoBehaviour
     public Sprite pixel, gem, ring, demon, mouse, keyCap, arrow;
     public Sprite clue, activator;
     public Sprite[] letters;
+
+    [Tooltip("The player's input asset, so the key caps show the keys the player chose in the settings.")]
+    public InputActionAsset actions;
     public string nextScene = "main";
     public float lessonSeconds = 6f;
     public int Lesson { get; private set; }
@@ -38,6 +41,7 @@ public class IntroSequence : MonoBehaviour
         Time.timeScale = 1f;
         AudioListener.pause = false;
         SoundSettings.Apply();
+        ControlBindings.Load(actions);
         Build();
     }
 
@@ -167,17 +171,17 @@ public class IntroSequence : MonoBehaviour
         if (Lesson == 0)
         {
             Graphic(stage, arrow, red, new Vector2(0, 160), new Vector2(30, 45));
-            Key('W', new Vector2(0, -131));
-            Key('A', new Vector2(-48, -179));
-            Key('S', new Vector2(0, -179));
-            Key('D', new Vector2(48, -179));
+            Key(ControlBindings.Up, new Vector2(0, -131));
+            Key(ControlBindings.Left, new Vector2(-48, -179));
+            Key(ControlBindings.Down, new Vector2(0, -179));
+            Key(ControlBindings.Right, new Vector2(48, -179));
             ShiftKey(new Vector2(-136, -179));
         }
         else if (Lesson == 1)
         {
             Locker(new Vector2(-90, 0), 78);
             Locker(new Vector2(0, 160), 52);
-            Key('E', new Vector2(0, -156));
+            Key(ControlBindings.Hide, new Vector2(0, -156));
         }
         else if (Lesson == 2)
         {
@@ -361,18 +365,54 @@ public class IntroSequence : MonoBehaviour
         shiftKey.Add(Graphic(stage, pixel, grey, at - new Vector2(0, h / 2 - edge / 2), new Vector2(w, edge)));
         shiftKey.Add(Graphic(stage, pixel, grey, at - new Vector2(w / 2 - edge / 2, 0), new Vector2(edge, h)));
         shiftKey.Add(Graphic(stage, pixel, grey, at + new Vector2(w / 2 - edge / 2, 0), new Vector2(edge, h)));
+        // Run moved to another key in the settings: show that key on the wide cap instead.
+        string path = ControlBindings.PathOf(actions, ControlBindings.Run);
+        if (ControlBindings.GlyphOf(path, out char letter) != ControlBindings.Glyph.Shift)
+        {
+            foreach (Image mark in Glyph(path, at)) shiftKey.Add(mark);
+            return;
+        }
         Image head = Graphic(stage, arrow, grey, at + new Vector2(0, 4), new Vector2(14, 20));
         head.rectTransform.localRotation = Quaternion.Euler(0, 0, 90); // the arrow art points right
         shiftKey.Add(head);
         shiftKey.Add(Graphic(stage, pixel, grey, at + new Vector2(0, -8), new Vector2(5, 10))); // its stem
     }
 
-    void Key(char c, Vector2 position)
+    /// <summary>A key cap for one of the player's actions, showing the key the player chose.</summary>
+    void Key(int slot, Vector2 position)
     {
         keys.Add(Graphic(stage, keyCap, grey, position, new Vector2(40, 40)));
-        int index = c - 'A';
-        if (letters != null && index >= 0 && index < letters.Length)
-            Graphic(stage, letters[index], red, position, new Vector2(22, 28));
+        Glyph(ControlBindings.PathOf(actions, slot), position); // the default key when there is no asset
+    }
+
+    /// <summary>A key's mark, in red: its letter, or a drawn symbol for Space, Enter and Shift.</summary>
+    List<Image> Glyph(string path, Vector2 at)
+    {
+        var marks = new List<Image>();
+        switch (ControlBindings.GlyphOf(path, out char letter))
+        {
+            case ControlBindings.Glyph.Space:
+                marks.Add(Graphic(stage, pixel, red, at + new Vector2(0, -8), new Vector2(26, 4)));
+                break;
+            case ControlBindings.Glyph.Enter:
+                marks.Add(Graphic(stage, pixel, red, at + new Vector2(9, 3), new Vector2(4, 12)));
+                marks.Add(Graphic(stage, pixel, red, at + new Vector2(2, -3), new Vector2(18, 4)));
+                Image tip = Graphic(stage, arrow, red, at + new Vector2(-9, -3), new Vector2(8, 12));
+                tip.rectTransform.localRotation = Quaternion.Euler(0, 0, 180);
+                marks.Add(tip);
+                break;
+            case ControlBindings.Glyph.Shift:
+                Image up = Graphic(stage, arrow, red, at, new Vector2(12, 18));
+                up.rectTransform.localRotation = Quaternion.Euler(0, 0, 90);
+                marks.Add(up);
+                break;
+            default:
+                int index = letter - 'A';
+                if (letters != null && index >= 0 && index < letters.Length)
+                    marks.Add(Graphic(stage, letters[index], red, at, new Vector2(22, 28)));
+                break;
+        }
+        return marks;
     }
 
     void Line(float x1, float y1, float x2, float y2, Color color, float thickness)

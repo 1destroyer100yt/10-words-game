@@ -73,6 +73,7 @@ public class GameAudio : MonoBehaviour
     void Start()
     {
         enemies = FindObjectsByType<NpcChaser>(FindObjectsInactive.Include);
+        GiveVoices();
         if (player != null)
         {
             playerBody = player.GetComponent<Rigidbody2D>();
@@ -84,6 +85,25 @@ public class GameAudio : MonoBehaviour
             ambienceSource.Play();
         }
         Subscribe();
+    }
+
+    /// <summary>
+    /// Every demon gets its own voice, in name order so the same demon always sounds the same. The
+    /// blind one is always the Listener.
+    /// </summary>
+    void GiveVoices()
+    {
+        var ordered = (NpcChaser[])enemies.Clone();
+        System.Array.Sort(ordered, (a, b) => string.CompareOrdinal(a.name, b.name));
+        int next = 0;
+        foreach (NpcChaser enemy in ordered)
+        {
+            var voice = enemy.GetComponent<DemonVoice>();
+            if (voice == null) voice = enemy.gameObject.AddComponent<DemonVoice>();
+            voice.listener = player;
+            bool blind = enemy.vision != null && enemy.vision.blind;
+            voice.voice = blind ? DemonSounds.Voice.Listener : (DemonSounds.Voice)(next++ % 3);
+        }
     }
 
     void OnDisable()
@@ -177,6 +197,9 @@ public class GameAudio : MonoBehaviour
     void OnCaught()
     {
         effectsSource.PlayOneShot(caught, effectsVolume);
+        GameRun run = GameRun.Instance;
+        DemonVoice catcher = run != null && run.CaughtBy != null ? run.CaughtBy.GetComponent<DemonVoice>() : null;
+        if (catcher != null) catcher.Scream();
     }
 
     void OnWon()

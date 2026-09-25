@@ -19,6 +19,7 @@ public static class WebBuild
     const string Company = "Andrew";
     const string Product = "Jewel of the Devil";
     const string Version = "2.0";
+    const string CreditsLogoPath = "Assets/Splash/credits.png";
 
     /// <summary>Where the player lands; kept beside the project rather than inside Assets.</summary>
     static string OutputDirectory =>
@@ -33,6 +34,7 @@ public static class WebBuild
             throw new BuildFailedException("Install WebGL Build Support for this editor through Unity Hub.");
         ConfigureScenes();
         ConfigureIdentity();
+        ConfigureSplash();
         ConfigureWeb();
         AssetDatabase.SaveAssets();
 
@@ -67,6 +69,39 @@ public static class WebBuild
         PlayerSettings.productName = Product;
         PlayerSettings.bundleVersion = Version;
         PlayerSettings.runInBackground = true;
+    }
+
+    /// <summary>
+    /// The startup splash: black, the credits drawn in the game's own pixel letters ("MADE BY" over
+    /// "ANDREW AND BRYANT"), and Unity's logo below them. The credits are the one place the game shows
+    /// words beyond its ten story words, by the owners' choice.
+    /// </summary>
+    static void ConfigureSplash()
+    {
+        if (AssetImporter.GetAtPath(CreditsLogoPath) is TextureImporter importer)
+        {
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.filterMode = FilterMode.Point;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
+        }
+        var credits = AssetDatabase.LoadAssetAtPath<Sprite>(CreditsLogoPath);
+        if (credits == null)
+        {
+            Debug.LogWarning($"Web build: no credits image at {CreditsLogoPath}; the splash shows Unity's logo only.");
+            return;
+        }
+        PlayerSettings.SplashScreen.show = true;
+        PlayerSettings.SplashScreen.showUnityLogo = true;
+        PlayerSettings.SplashScreen.backgroundColor = Color.black;
+        PlayerSettings.SplashScreen.unityLogoStyle = PlayerSettings.SplashScreen.UnityLogoStyle.LightOnDark;
+        PlayerSettings.SplashScreen.drawMode = PlayerSettings.SplashScreen.DrawMode.UnityLogoBelow;
+        // No slow zoom: scaling pixel letters by fractions makes them shimmer.
+        PlayerSettings.SplashScreen.animationMode = PlayerSettings.SplashScreen.AnimationMode.Static;
+        PlayerSettings.SplashScreen.logos = new[] { PlayerSettings.SplashScreenLogo.Create(3f, credits) };
     }
 
     static void ConfigureWeb()

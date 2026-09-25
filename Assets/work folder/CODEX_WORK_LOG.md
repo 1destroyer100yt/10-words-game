@@ -567,3 +567,34 @@ Every claim was checked against the current code first; all held.
 - Web build with today's work (hidden clues, shuffled layout, running noise ring, win result, quality setting, the Listener), then the browser checks and the zip.
 - Screenshots and a short GIF for the itch page, after the build.
 - Owner's side: commit today's work; the A* license question for the public repo; itch page; cover at 630x500.
+
+## 2026-09-25 — Web build with the Listener
+
+- Web build of the 24 September work (hidden clues, shuffled layout, running noise ring, win result, quality setting, the Listener). 11 MB in 6 min. Zip named `Jewel-of-the-Devil-web-2.1.zip` for the owner's playtest (the in-game version string is still 2.0).
+- Browser: the intro works; the title shows the quality bars and five levels; a level-5 run starts; the console has no errors, path lines or sync warnings; level 5 is kept after a reload.
+- Next: the owner's playtest, fixes, final build, itch screenshots and GIF.
+
+## 2026-09-25 — Settings panel: change the controls, quality moved in
+
+- Owner asked for a settings menu where the controls and the quality can be changed.
+- `ControlBindings` (new): seven player keys, each one keyboard binding in the input asset (up, left, down, right = the WASD composite parts; run = left Shift; hide = E; throw = Enter). Stored as Input System binding overrides in PlayerPrefs `Floorplan.Controls`. Allowed keys: letters except R, Space, Enter, left Shift, because each can be drawn without a word; R and Esc keep restart and pause. The arrow keys, right Shift, the mouse click and the gamepad stay as fixed extra bindings. A key already in use swaps with the old one.
+- MenuScreen: a gear (drawn at runtime from a pixel map, like the locker and reset icons) replaces the quality bars in the top-right row. It opens a panel over the lower title: back, quality bars and reset along the top, then arrow/run/locker/coin icons each beside a key cap. Click a cap (it blinks red), press a key; Esc or a click elsewhere cancels. Esc closes the panel, not the menu. Works on the pause screen too.
+- IntroSequence: takes the input asset (set in Intro.unity and in StartupSetup) and draws the player's chosen keys on its key caps, including the Shift lesson.
+- Verified: Story Test 46/46; editor checks of set, swap, save/reload and reset; browser: opened the panel from the gear, changed hide to K with a real key press, reloaded, and the intro's hide lesson showed K; console clean.
+- itch material in `Build/itch/` (gitignored): `1-title.png`, `2-story.png`, `3-hunted.png`, `4-settings.png` (1910x1074), `demon-approach.gif` (955x537, 52 frames, 0.6 MB), `itch-page.md` (settings, description, controls, credits, AI disclosure), and the zip. Editor screenshots need `InternalEditorUtility.RepaintAllViews()` first, or the Game view is stale while the editor is unfocused.
+- README updated: hidden clues, shuffled building, loud running, click-to-aim coin, the settings panel, the five levels and the Listener.
+- Web build (2.1 zip, in-game version 2.0) with all of the above.
+
+## Open at end of 2026-09-25
+
+- Owner: playtest the 2.1 zip (upload to itch as a draft), report anything unfair or confusing.
+- Owner: the A* licence question for the public repo.
+- Owner: cover image for the 630x500 version; the itch page (text ready in Build/itch/itch-page.md).
+- Release on the 30th.
+
+## 2026-09-25 — Credits on the startup splash
+
+- Owner asked for a "made by Andrew and Bryant" screen. It breaks the ten-word rule; asked, and the owner chose to break it for the credits only (recorded in memory). Then asked for it on Unity's startup splash rather than a separate screen.
+- `Assets/Splash/credits.png` (556x88): "MADE BY" in grey over "ANDREW AND BRYANT" in red, built from the game's own 7x7 letter glyphs at 4x, transparent background.
+- `WebBuild.ConfigureSplash` (runs on every Configure/Build): imports it as a point-filtered sprite and sets the splash to black, the credits logo for 3 s, Unity's logo below (UnityLogoBelow, LightOnDark), and a static splash (no zoom, which made the pixel letters shimmer).
+- Checked in the browser: the splash shows the credits above "Made with Unity", crisp, then the intro starts. Zip in Build/itch/.

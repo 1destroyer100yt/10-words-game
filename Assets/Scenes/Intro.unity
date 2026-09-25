@@ -278,6 +278,7 @@ MonoBehaviour:
   - {fileID: 8479424620472505535, guid: df8789c62ea199245a3314bf3777d2b4, type: 3}
   - {fileID: 4597242363245698359, guid: df8789c62ea199245a3314bf3777d2b4, type: 3}
   - {fileID: 1951534038693420353, guid: df8789c62ea199245a3314bf3777d2b4, type: 3}
+  actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   nextScene: main
   lessonSeconds: 6
 --- !u!114 &999432315

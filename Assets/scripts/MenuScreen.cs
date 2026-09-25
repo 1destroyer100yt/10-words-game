@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
@@ -131,6 +132,9 @@ public class MenuScreen : MonoBehaviour
         }
         SoundSettings.Apply();
         GraphicsQuality.Apply();
+        var playerController = FindAnyObjectByType<PlayerController>();
+        controls = playerController != null ? playerController.actions : null;
+        ControlBindings.Load(controls);
         Open();
     }
 
@@ -157,10 +161,21 @@ public class MenuScreen : MonoBehaviour
         Breathe();
         BlinkResult();
         Hover();
+        BlinkRebind();
 
         // A short grace period stops the click that opened the page from skipping the menu instantly.
         if (Time.unscaledTime - openedAt < 0.25f) return;
 
+        if (rebindingSlot >= 0) { CaptureKey(); return; }
+        if (settingsOpen)
+        {
+            if (EscapePressed()) { CloseSettings(); return; }
+            if (DragVolume()) return;
+            if (Clicked()) return;
+            Keyboard board = Keyboard.current;
+            if (board != null && board.qKey.wasPressedThisFrame) CycleQuality();
+            return;
+        }
         if (EscapePressed() && run != null && run.HasBegun) { Close(); return; }
         if (DragVolume()) return;
         if (Clicked()) return;
@@ -474,6 +489,8 @@ public class MenuScreen : MonoBehaviour
     public void Close()
     {
         if (!IsOpen) return;
+        settingsOpen = false;
+        rebindingSlot = -1;
         showResult = false; // shown once, on the title that follows the ending
         IsOpen = false;
         SetVisible(false);
@@ -533,6 +550,8 @@ public class MenuScreen : MonoBehaviour
             if (spot.image == soundImage) continue; // the sound switch shows its state, not the pointer
             if (spot.image == volumeTrack) continue; // so does the volume slider
             if (qualityBars != null && spot.image == qualityBars[1]) continue; // and the quality bars
+            if (rebindingSlot >= 0 && rebindParts.Contains(spot.image)) continue; // the key being changed blinks
+            if (keyMarks.Contains(spot.image)) continue;
             if (fullscreenParts != null && spot.image == fullscreenParts[0])
             {
                 bool overFullscreen = RectTransformUtility.RectangleContainsScreenPoint(spot.rect, point, null);
@@ -811,22 +830,12 @@ public class MenuScreen : MonoBehaviour
         PaintVolume();
         AddHotspot(volumeTrack, trackWidth + knob * 2f, height * 1.6f, BeginVolumeDrag);
 
-        // Quality: three rising bars, lit up to the chosen level, like a signal meter.
+        // Settings: a gear that opens the panel with the controls and the quality.
         if (hasQuality)
         {
-            Vector2 qualityAt = new Vector2(qualityX, trackY);
-            float barWidth = mark * 0.22f;
-            float bottom = trackY - mark * 0.42f;
-            qualityBars = new Image[GraphicsQuality.Levels];
-            for (int i = 0; i < qualityBars.Length; i++)
-            {
-                float barHeight = mark * (0.36f + 0.24f * i);
-                float x = qualityAt.x + (i - 1) * barWidth * 1.6f;
-                qualityBars[i] = Add(pixel, hintColor, barWidth, barHeight, new Vector2(x, bottom + barHeight * 0.5f));
-            }
-            PaintQuality();
-            AddHotspot(qualityBars[1], mark * 1.5f, height * 1.6f, CycleQuality);
-            hotspots[hotspots.Count - 1].rect.anchoredPosition = qualityAt;
+            Vector2 gearAt = new Vector2(qualityX, trackY);
+            Image gear = Add(PixelSprite("gear", GearArt), settingsOpen ? markColor : hintColor, mark, mark, gearAt);
+            AddHotspot(gear, mark * 1.5f, height * 1.6f, settingsOpen ? (System.Action)CloseSettings : OpenSettings);
         }
 
         // Fullscreen: four corner brackets pointing out, or pointing in once already fullscreen.
@@ -838,6 +847,269 @@ public class MenuScreen : MonoBehaviour
     }
 
     Image[] qualityBars;
+
+    // ------------------------------------------------------------------ settings panel
+
+    InputActionAsset controls;
+    bool settingsOpen;
+    int rebindingSlot = -1;
+    float rebindStarted;
+    readonly List<Image> rebindParts = new List<Image>();
+    readonly List<Image> keyMarks = new List<Image>(); // stay red: they show the key, not the pointer
+    static readonly Dictionary<string, Sprite> PixelIcons = new Dictionary<string, Sprite>();
+
+    static readonly string[] GearArt =
+    {
+        "....###....",
+        "..#.###.#..",
+        ".#########.",
+        "..##...##..",
+        "###.....###",
+        "###.....###",
+        "###.....###",
+        "..##...##..",
+        ".#########.",
+        "..#.###.#..",
+        "....###....",
+    };
+
+    static readonly string[] LockerArt =
+    {
+        "#######",
+        "#..#..#",
+        "#..#..#",
+        "#.##.##",
+        "#..#..#",
+        "#.##.##",
+        "#..#..#",
+        "#..#..#",
+        "#..#..#",
+        "#######",
+    };
+
+    static readonly string[] ResetArt =
+    {
+        "#.#####..",
+        "##.....#.",
+        "###.....#",
+        "........#",
+        "........#",
+        "#.......#",
+        ".#.....#.",
+        "..#####..",
+    };
+
+    /// <summary>A small white icon from a pixel map; the Image colour tints it. Built once.</summary>
+    static Sprite PixelSprite(string key, string[] rows)
+    {
+        if (PixelIcons.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+        int height = rows.Length, width = rows[0].Length;
+        var texture = new Texture2D(width, height, TextureFormat.RGBA32, false)
+        {
+            filterMode = FilterMode.Point,
+            wrapMode = TextureWrapMode.Clamp,
+        };
+        var pixels = new Color32[width * height];
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+                pixels[(height - 1 - y) * width + x] = rows[y][x] == '#' ? new Color32(255, 255, 255, 255) : new Color32(0, 0, 0, 0);
+        texture.SetPixels32(pixels);
+        texture.Apply(false, true);
+        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f), 1f);
+        PixelIcons[key] = sprite;
+        return sprite;
+    }
+
+    void OpenSettings()
+    {
+        settingsOpen = true;
+        rebindingSlot = -1;
+        Rebuild();
+        SetVisible(true);
+    }
+
+    void CloseSettings()
+    {
+        settingsOpen = false;
+        rebindingSlot = -1;
+        Rebuild();
+        SetVisible(true);
+    }
+
+    void ResetControls()
+    {
+        ControlBindings.ResetAll(controls);
+        Rebuild();
+        SetVisible(true);
+    }
+
+    void BeginRebind(int slot)
+    {
+        rebindingSlot = slot;
+        rebindStarted = Time.unscaledTime;
+        Rebuild();
+        SetVisible(true);
+    }
+
+    void EndRebind()
+    {
+        rebindingSlot = -1;
+        Rebuild();
+        SetVisible(true);
+    }
+
+    /// <summary>Waits for the new key: an allowed key sets it, Esc or a click elsewhere cancels.</summary>
+    void CaptureKey()
+    {
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard != null)
+        {
+            if (keyboard.escapeKey.wasPressedThisFrame) { EndRebind(); return; }
+            foreach (KeyControl key in keyboard.allKeys)
+            {
+                if (key == null || !key.wasPressedThisFrame || !ControlBindings.Allowed(key)) continue;
+                ControlBindings.Set(controls, rebindingSlot, ControlBindings.PathFor(key));
+                EndRebind();
+                return;
+            }
+        }
+        Mouse mouse = Mouse.current;
+        if (mouse != null && mouse.leftButton.wasPressedThisFrame && Time.unscaledTime - rebindStarted > 0.2f) EndRebind();
+    }
+
+    void BlinkRebind()
+    {
+        if (rebindingSlot < 0) return;
+        bool on = Mathf.Repeat(Time.unscaledTime, 0.5f) < 0.3f;
+        foreach (Image part in rebindParts)
+        {
+            if (part != null) part.color = on ? markColor : hintColor;
+        }
+    }
+
+    /// <summary>
+    /// The settings panel, over the lower half of the title: back, quality and reset along the top,
+    /// then one row per action, its picture beside its key. Click a key, press the new one.
+    /// </summary>
+    void BuildSettings(float w, float h)
+    {
+        rebindParts.Clear();
+        keyMarks.Clear();
+        float cell = Mathf.Min(Mathf.Clamp(h * 0.062f, 20f, 44f), w * 0.045f);
+        float panelWidth = Mathf.Min(w * 0.72f, cell * 17f);
+        float panelHeight = cell * 8.9f;
+        Vector2 centre = new Vector2(0f, -h * 0.15f);
+        ButtonFrame(centre, panelWidth, panelHeight);
+
+        float top = centre.y + panelHeight * 0.5f - cell * 1.1f;
+
+        Vector2 backAt = new Vector2(centre.x - panelWidth * 0.5f + cell * 1.1f, top);
+        Image back = Add(arrowLeft, hintColor, cell * 0.45f, cell * 0.7f, backAt);
+        AddHotspot(back, cell * 1.6f, cell * 1.6f, CloseSettings);
+
+        // Quality, the same three bars as a signal meter; click or Q cycles.
+        Vector2 qualityAt = new Vector2(centre.x, top);
+        float barWidth = cell * 0.24f;
+        float bottom = top - cell * 0.45f;
+        qualityBars = new Image[GraphicsQuality.Levels];
+        for (int i = 0; i < qualityBars.Length; i++)
+        {
+            float barHeight = cell * (0.38f + 0.26f * i);
+            float x = qualityAt.x + (i - 1) * barWidth * 1.7f;
+            qualityBars[i] = Add(pixel, hintColor, barWidth, barHeight, new Vector2(x, bottom + barHeight * 0.5f));
+        }
+        PaintQuality();
+        AddHotspot(qualityBars[1], cell * 1.8f, cell * 1.5f, CycleQuality);
+        hotspots[hotspots.Count - 1].rect.anchoredPosition = qualityAt;
+
+        Vector2 resetAt = new Vector2(centre.x + panelWidth * 0.5f - cell * 1.1f, top);
+        Image reset = Add(PixelSprite("reset", ResetArt), hintColor, cell * 0.8f, cell * 0.72f, resetAt);
+        AddHotspot(reset, cell * 1.6f, cell * 1.6f, ResetControls);
+
+        Add(pixel, hintColor, panelWidth - cell, 2f, new Vector2(centre.x, top - cell * 0.95f));
+
+        float rowGap = cell * 1.45f;
+        float firstRow = top - cell * 2.15f;
+        int[] leftColumn = { ControlBindings.Up, ControlBindings.Left, ControlBindings.Down, ControlBindings.Right };
+        int[] rightColumn = { ControlBindings.Run, ControlBindings.Hide, ControlBindings.Throw };
+        for (int i = 0; i < leftColumn.Length; i++)
+            ControlRow(leftColumn[i], new Vector2(centre.x - panelWidth * 0.24f, firstRow - i * rowGap), cell);
+        for (int i = 0; i < rightColumn.Length; i++)
+            ControlRow(rightColumn[i], new Vector2(centre.x + panelWidth * 0.22f, firstRow - i * rowGap), cell);
+    }
+
+    void ControlRow(int slot, Vector2 at, float cell)
+    {
+        ActionIcon(slot, at + Vector2.left * cell * 1.3f, cell);
+
+        string path = ControlBindings.PathOf(controls, slot);
+        ControlBindings.Glyph glyph = ControlBindings.GlyphOf(path, out char letter);
+        bool wide = glyph != ControlBindings.Glyph.Letter;
+        float keyWidth = cell * (wide ? 2f : 1.15f);
+        float keyHeight = cell * 1.15f;
+        Vector2 keyAt = at + Vector2.right * (cell * 0.35f + keyWidth * 0.5f);
+
+        Image[] edges =
+        {
+            Add(pixel, hintColor, keyWidth, 2f, keyAt + Vector2.up * keyHeight * 0.5f),
+            Add(pixel, hintColor, keyWidth, 2f, keyAt - Vector2.up * keyHeight * 0.5f),
+            Add(pixel, hintColor, 2f, keyHeight, keyAt + Vector2.left * keyWidth * 0.5f),
+            Add(pixel, hintColor, 2f, keyHeight, keyAt + Vector2.right * keyWidth * 0.5f),
+        };
+        Image mark = KeyGlyph(glyph, letter, keyAt, cell);
+        if (slot == rebindingSlot)
+        {
+            rebindParts.AddRange(edges);
+            if (mark != null) rebindParts.Add(mark);
+        }
+        if (mark == null) return;
+        keyMarks.Add(mark);
+        AddHotspot(mark, keyWidth + cell * 0.3f, keyHeight + cell * 0.3f, () => BeginRebind(slot));
+        hotspots[hotspots.Count - 1].rect.anchoredPosition = keyAt;
+    }
+
+    /// <summary>The key's own mark: its letter, or a drawn symbol for Space, Enter and Shift.</summary>
+    Image KeyGlyph(ControlBindings.Glyph glyph, char letter, Vector2 at, float cell)
+    {
+        switch (glyph)
+        {
+            case ControlBindings.Glyph.Space:
+                return Add(pixel, markColor, cell * 1.2f, cell * 0.14f, at - Vector2.up * cell * 0.22f);
+            case ControlBindings.Glyph.Enter:
+                Add(pixel, markColor, cell * 0.14f, cell * 0.42f, at + new Vector2(cell * 0.42f, cell * 0.1f));
+                Add(pixel, markColor, cell * 0.7f, cell * 0.14f, at + new Vector2(cell * 0.1f, -cell * 0.1f));
+                return Add(arrowLeft, markColor, cell * 0.28f, cell * 0.42f, at + new Vector2(-cell * 0.32f, -cell * 0.1f));
+            case ControlBindings.Glyph.Shift:
+                return Add(arrowRight, markColor, cell * 0.36f, cell * 0.55f, at, 90f);
+            default:
+                Sprite sprite = Letter(letter);
+                return sprite != null ? Add(sprite, markColor, cell * 0.62f, cell * 0.62f, at) : null;
+        }
+    }
+
+    /// <summary>What each action is, drawn: four arrows, a double arrow to run, a locker, the coin.</summary>
+    void ActionIcon(int slot, Vector2 at, float cell)
+    {
+        float aw = cell * 0.42f, ah = cell * 0.66f;
+        switch (slot)
+        {
+            case ControlBindings.Up: Add(arrowRight, hintColor, aw, ah, at, 90f); break;
+            case ControlBindings.Left: Add(arrowRight, hintColor, aw, ah, at, 180f); break;
+            case ControlBindings.Down: Add(arrowRight, hintColor, aw, ah, at, -90f); break;
+            case ControlBindings.Right: Add(arrowRight, hintColor, aw, ah, at, 0f); break;
+            case ControlBindings.Run:
+                Add(arrowRight, hintColor, aw * 0.8f, ah * 0.8f, at + Vector2.up * cell * 0.2f, 90f);
+                Add(arrowRight, hintColor, aw * 0.8f, ah * 0.8f, at - Vector2.up * cell * 0.2f, 90f);
+                break;
+            case ControlBindings.Hide:
+                Add(PixelSprite("locker", LockerArt), hintColor, cell * 0.6f, cell * 0.86f, at);
+                Add(pixel, markColor, cell * 0.08f, cell * 0.2f, at + new Vector2(cell * 0.14f, -cell * 0.05f));
+                break;
+            case ControlBindings.Throw:
+                if (coin != null) Add(coin, markColor, cell * 0.45f, cell * 0.45f, at);
+                break;
+        }
+    }
 
     void CycleQuality()
     {
@@ -886,6 +1158,12 @@ public class MenuScreen : MonoBehaviour
         float artWidth = Mathf.Max(w, h * aspect);
         Add(menuArt, Color.white, artWidth, artWidth / aspect, Vector2.zero);
         BuildFrame(w, h);
+        if (settingsOpen)
+        {
+            BuildSettings(w, h);
+            BuildSound(w * 0.5f, h * 0.5f, h);
+            return;
+        }
         BuildDifficulty(w, h);
         float buttonWidth = Mathf.Min(180f, w * 0.31f);
         float buttonHeight = Mathf.Clamp(h * 0.10f, 44f, 68f);
