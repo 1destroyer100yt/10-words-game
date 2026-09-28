@@ -8,17 +8,30 @@ Everything below is ready to paste. Build/ is not in git, so this file stays on 
 - **Short description / tagline:** A stealth horror game told in ten words.
 - **Classification:** Games
 - **Kind of project:** HTML
-- **Upload:** `Jewel-of-the-Devil-web-2.1.zip` (the newest one Claude sent). Tick **This file will be played in the browser**.
+- **Upload:** `Jewel-of-the-Devil-web-2.2.zip` (the newest one Claude sent). Tick **This file will be played in the browser**.
 - **Viewport dimensions:** 1280 x 720
 - **Frame options:** tick **Fullscreen button**. Leave **Mobile friendly** off (it needs a keyboard). Leave **SharedArrayBuffer support** off.
 - **Genre:** Action (or Survival)
 - **Tags:** horror, stealth, pixel-art, top-down, atmospheric, short, minimalist, singleplayer
-- **AI generation disclosure:** Yes, for graphics. (Part of the art was drawn by Codex and Claude through code, and the cover image was AI-generated. The audio is yours; answer No for sound and for text unless you know otherwise.)
-- **Cover image:** your cover at 630 x 500 (send it to Claude to letterbox it so nothing is cropped).
+- **AI generation disclosure:** Yes, for graphics. (Part of the art was drawn by Codex and Claude through code. The demon voices were made by Claude in code, so answer Yes for sound too. Answer No for text.)
+- **Cover image:** `cover-630x500.png` (the pixel cover drawn by `Assets/work folder/cover-art/draw_cover.py` from the title-screen art).
 - **Screenshots, in this order:** `3-hunted.png`, `2-story.png`, `1-title.png`, `4-settings.png`. Add `demon-approach.gif` as the first screenshot if you want the page to move.
 - **Visibility:** Draft (Restricted) until you have played one full run on the page, then Public on the 30th.
 
+## Theme (Edit theme, top of the game page)
+
+itch removes any CSS or scripts from the description, so the look comes from these settings.
+
+- **Banner:** upload `banner.png` (960 x 300, the demon from the title screen).
+- **Background:** `#000000`. **Second background** (the panel behind the text): `#0d0d0d`, or `#000000` for one flat black.
+- **Text:** `#bdbdbd`. The game's own grey (`#464646`) is too dark to read on black.
+- **Links and buttons:** `#ed1c24`, the game's red.
+- **Headers font:** pick a pixel font from the list if there is one (Silkscreen or VT323 suit the game); otherwise keep the default. **Body font:** default.
+- **Layout:** screenshots in the right column; the game embed above the text.
+
 ## Description
+
+Paste `itch-description.html` with the editor's `<>` (HTML) button. The version below is the same text in plain words.
 
 > Goondalot is dying. King Tesseract steals the Jewel of the Devil from Devilorian, ruler of the
 > Underworld, to save it, and drops it while fleeing through the School of Goondalot. Devilorian
@@ -56,7 +69,6 @@ Keys can be changed with the gear on the title screen, which also sets the graph
 
 - Andrew D. — design, story, programming, audio
 - Bryant — art, animation, map and minimap
-- Built with Claude and Codex
 - A* Pathfinding Project (free version) by Aron Granberg
 
 ## Before you publish

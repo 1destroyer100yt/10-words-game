@@ -598,3 +598,28 @@ Every claim was checked against the current code first; all held.
 - `Assets/Splash/credits.png` (556x88): "MADE BY" in grey over "ANDREW AND BRYANT" in red, built from the game's own 7x7 letter glyphs at 4x, transparent background.
 - `WebBuild.ConfigureSplash` (runs on every Configure/Build): imports it as a point-filtered sprite and sets the splash to black, the credits logo for 3 s, Unity's logo below (UnityLogoBelow, LightOnDark), and a static splash (no zoom, which made the pixel letters shimmer).
 - Checked in the browser: the splash shows the credits above "Made with Unity", crisp, then the intro starts. Zip in Build/itch/.
+
+## 2026-09-28 — Demon voices (approved by the owner on 2026-09-25)
+
+- `DemonSounds.cs` generates each demon's sounds at runtime: Groaner (groan; snarl, deep snarl, heavy grunt), Whisperer (whisper; short snarl), Clicker (bone clicks; grunt, slow triple grunt), Listener (sniffing; sinking snarl). Each has a scream. The owner rejected the breath "notice" sound and grunt H.
+- `DemonVoice.cs`, added by `GameAudio.GiveVoices()` in name order, with the blind demon always the Listener. It plays its idle sound every 5-10 s while wandering, a notice sound on alert and every 2-3 s in a chase, panned left/right, fading out by 22 units and quieter through walls.
+- `GameRun.CaughtBy` lets the catching demon scream over the caught thump.
+- `.gitignore` now tracks `Build/Web` and `Build/itch` (owner: all builds go to git). Devlog for 21-27 Sept is in `Build/itch/devlog-2026-09-21-to-27.md`.
+- Story Test passed. In play, each demon had the right voice.
+
+## 2026-09-28 — Dome security cameras (owner picked option B)
+
+- The old camera body was a grey oval on the grey floor, so only the red lens showed. The new art is a dome with a black outline and an eye, on a wall arm that stays still while the dome sweeps (`CameraBodyArt` and `CameraMountArt` in FloorplanSetup.Features.cs; drawing script and preview in `camera-art/`).
+- `ApplyCameraLook` is shared by the level builder and the new menu item "Tools/Floorplan/Refresh Security Cameras", which updated the 6 cameras in main.unity without a rebuild. The lens now sits in the dome's eye and turns with it, and the view cone starts at the dome.
+- In the dark, only the lens still shows. The owner chose no faint body: "as long as it moves people will know".
+- Story Test: passes at level 1. Two runs failed at the saved editor difficulty (level 5), where the Listener or a hard demon caught the teleporting test player. The test does not set the difficulty; the owner's saved level 5 was put back afterwards.
+
+## 2026-09-28 — Web build 2.2
+
+- Version 2.2, with the demon voices and dome cameras. It built in about 6 minutes (11 MB). In the browser, the credits splash, title, story and gameplay all ran with a clean console.
+- Zipped to `Build/itch/Jewel-of-the-Devil-web-2.2.zip` (11.2 MB), with index.html at the zip root. `itch-page.md` now points at 2.2, and its AI note now says Yes for sound, because the demon voices were made in code by Claude.
+
+## 2026-09-28 — itch page assets
+
+- `Build/itch/itch-description.html` is the description in plain HTML (itch strips CSS and scripts). `banner.png` (960x300) is cut from the title art. The theme colours are in `itch-page.md`.
+- The owner rejected the AI cover for looking AI-made. The new cover is drawn by `cover-art/draw_cover.py`: the title-art scene plus "JEWEL OF THE DEVIL" in the game's own pixel letters. It is swapped in as `Build/itch/cover-630x500.png`.

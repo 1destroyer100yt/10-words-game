@@ -304,6 +304,80 @@ public static partial class FloorplanSetup
 
     // ------------------------------------------------------------------ security cameras
 
+    const float CameraDomeSize = 0.9f;
+    const float CameraMountHeight = 0.45f;
+
+    /// <summary>
+    /// The dome on its wall arm. The arm stays put while the dome turns with the sweep, the lens sits
+    /// in the dome's eye so it swings with it, and the view starts from the dome rather than the
+    /// wall. The camera's own origin is a little inside the wall.
+    /// </summary>
+    static void ApplyCameraLook(SecurityCamera camera, Icons icons)
+    {
+        Transform root = camera.transform;
+        var housingRenderer = camera.housing.GetComponent<SpriteRenderer>();
+        housingRenderer.sprite = icons.cameraBody;
+        housingRenderer.color = White; // the art carries its own black and grey
+
+        Transform mount = root.Find("Mount");
+        if (mount == null)
+        {
+            mount = new GameObject("Mount").transform;
+            mount.SetParent(root, false);
+        }
+        var mountRenderer = mount.GetComponent<SpriteRenderer>();
+        if (mountRenderer == null) mountRenderer = mount.gameObject.AddComponent<SpriteRenderer>();
+        mountRenderer.sprite = icons.cameraMount;
+        mountRenderer.color = White;
+        mountRenderer.sortingOrder = 3;
+        mountRenderer.sharedMaterial = housingRenderer.sharedMaterial;
+        // The plate overlaps the wall face a little so it reads as fixed to it.
+        mount.localPosition = new Vector3(0f, 0.15f + CameraMountHeight * 0.5f, 0f);
+        mount.localRotation = Quaternion.identity;
+        ScaleSprite(mount, icons.cameraMount, CameraDomeSize, CameraMountHeight);
+
+        float domeY = 0.15f + CameraMountHeight + CameraDomeSize * 0.5f - 0.05f;
+        camera.housing.localPosition = new Vector3(0f, domeY, 0f);
+        ScaleSprite(camera.housing, icons.cameraBody, CameraDomeSize, CameraDomeSize);
+        if (camera.vision != null) camera.vision.transform.localPosition = new Vector3(0f, domeY, 0f);
+
+        // The eye is 2 art pixels ahead of the dome's centre, out of 12; the dome sprite is 1 unit tall.
+        Transform lens = camera.lens.transform;
+        lens.SetParent(camera.housing, false);
+        lens.localRotation = Quaternion.identity;
+        lens.localPosition = new Vector3(0f, 2f / 12f, 0f);
+        float lensSize = 0.22f / CameraDomeSize;
+        Vector2 dot = camera.lens is SpriteRenderer lensSprite && lensSprite.sprite != null
+            ? (Vector2)lensSprite.sprite.bounds.size : Vector2.one;
+        lens.localScale = new Vector3(lensSize / dot.x, lensSize / dot.y, 1f);
+    }
+
+    /// <summary>Puts the current camera art on the cameras already in the scene, without a rebuild.</summary>
+    [MenuItem("Tools/Floorplan/Refresh Security Cameras")]
+    public static void RefreshSecurityCameras()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode)
+        {
+            Debug.LogError("Security cameras: stop Play mode first.");
+            return;
+        }
+        Icons icons = EnsureIcons();
+        SecurityCamera[] cameras = Object.FindObjectsByType<SecurityCamera>(FindObjectsInactive.Include);
+        if (cameras.Length == 0)
+        {
+            Debug.LogError("Security cameras: open the main scene first.");
+            return;
+        }
+        foreach (SecurityCamera camera in cameras)
+        {
+            Undo.RegisterFullObjectHierarchyUndo(camera.gameObject, "Refresh security cameras");
+            ApplyCameraLook(camera, icons);
+        }
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(cameras[0].gameObject.scene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(cameras[0].gameObject.scene);
+        Debug.Log($"Security cameras: {cameras.Length} refreshed. Scene saved.");
+    }
+
     static void CreateSecurityCameras(FeatureContext ctx, Icons icons, List<WallSpot> spots)
     {
         GameObject root = CreateRoot(SecurityCamerasName);
@@ -323,22 +397,16 @@ public static partial class FloorplanSetup
             var housing = new GameObject("Housing");
             housing.transform.SetParent(go.transform, false);
             var housingRenderer = housing.AddComponent<SpriteRenderer>();
-            housingRenderer.sprite = icons.cameraBody;
-            housingRenderer.color = Grey; // a fixture on the wall, not a fourth colour
             housingRenderer.sortingOrder = 3;
             if (ctx.lit != null) housingRenderer.sharedMaterial = ctx.lit;
-            ScaleSprite(housing.transform, icons.cameraBody, 1.1f, 0.75f);
 
             // Unlit, so the blinking lens is the one thing you can see in a dark corridor.
             var lens = new GameObject("Lens");
-            lens.transform.SetParent(go.transform, false);
-            lens.transform.localPosition = new Vector3(0f, 0.3f, 0f);
             var lensRenderer = lens.AddComponent<SpriteRenderer>();
             lensRenderer.sprite = icons.dot;
             lensRenderer.color = Red;
             lensRenderer.sortingOrder = 4;
             if (ctx.unlit != null) lensRenderer.sharedMaterial = ctx.unlit;
-            ScaleSprite(lens.transform, icons.dot, 0.28f, 0.28f);
 
             GameObject visionGo = CreateVisionCone(go.transform, ctx, ctx.player.transform,
                 SecurityCameraViewAngle, SecurityCameraViewDistance, out NpcVision vision);
@@ -348,6 +416,7 @@ public static partial class FloorplanSetup
             securityCamera.housing = housing.transform;
             securityCamera.lens = lensRenderer;
             securityCamera.detectTime = 1f;
+            ApplyCameraLook(securityCamera, icons);
 
             // Radar rule: a camera you have never walked past is not on your map.
             var reveal = go.AddComponent<MinimapReveal>();
@@ -735,6 +804,7 @@ public static partial class FloorplanSetup
         public Sprite ring;
         public Sprite dot;
         public Sprite cameraBody;
+        public Sprite cameraMount;
         public Sprite lockerEmpty;
         public Sprite lockerFull;
         public Sprite pixel;
@@ -798,6 +868,7 @@ public static partial class FloorplanSetup
             exclaim = EnsureArtIcon("Exclaim", ExclaimArt),
             skull = EnsureArtIcon("Skull", SkullArt),
             cameraBody = EnsureArtIcon("CameraBody", CameraBodyArt),
+            cameraMount = EnsureArtIcon("CameraMount", CameraMountArt),
             coin = EnsureDisc("Coin", 8, White, false),
             dot = EnsureDisc("Dot", 8, White, false),
             ring = EnsureDisc("Ring", 64, White, true),
@@ -978,16 +1049,34 @@ public static partial class FloorplanSetup
     };
 
     // The lens end points up (+Y), which is the direction the cone looks.
+    // A dome seen from above, facing up; the eye sits forward so you can see where it looks. Drawn
+    // in its own black and grey, because a grey body on the grey floor vanished and left only the
+    // red lens. From Assets/work folder/camera-art/draw_camera.py, option B.
     static readonly string[] CameraBodyArt =
     {
-        ".....wwww.....",
-        "....wwwwww....",
-        "...wwwwwwww...",
-        "..wwwwwwwwww..",
-        "..wwwwwwwwww..",
-        "...wwwwwwww...",
-        "....wwwwww....",
-        ".....wwww.....",
+        "....xxxx....",
+        "..xxooooxx..",
+        ".xooxxxxoox.",
+        ".xoxxxxxxox.",
+        "xooxxxxxxoox",
+        "xoooxxxxooox",
+        "xoooooooooox",
+        "xoooooooooox",
+        ".xoooooooox.",
+        ".xoooooooox.",
+        "..xxooooxx..",
+        "....xxxx....",
+    };
+
+    // The arm and wall plate, which stay still while the dome sweeps.
+    static readonly string[] CameraMountArt =
+    {
+        "....xoox....",
+        "....xoox....",
+        "....xoox....",
+        "..xxxxxxxx..",
+        "..xoooooox..",
+        "..xxxxxxxx..",
     };
 
     static Color32 FromCode(char code)
