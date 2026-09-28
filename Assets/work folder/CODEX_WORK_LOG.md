@@ -623,3 +623,12 @@ Every claim was checked against the current code first; all held.
 
 - `Build/itch/itch-description.html` is the description in plain HTML (itch strips CSS and scripts). `banner.png` (960x300) is cut from the title art. The theme colours are in `itch-page.md`.
 - The owner rejected the AI cover for looking AI-made. The new cover is drawn by `cover-art/draw_cover.py`: the title-art scene plus "JEWEL OF THE DEVIL" in the game's own pixel letters. It is swapped in as `Build/itch/cover-630x500.png`.
+
+## Open at end of 2026-09-28
+
+- **Bug, fix on 2026-09-29: some dome cameras float off their wall.** The owner's screenshot shows grey floor between the mount plate and the wall. `ApplyCameraLook` places the mount at a fixed 0.15 from the camera origin, but the origin (`spot.position - spot.normal * 0.25`) is not always the same distance from the wall face. Camera 5 touched its wall; others don't. Plan:
+  1. In `ApplyCameraLook`, find the real wall face. Call `Physics2D.SyncTransforms()`, then raycast from the origin + up * 2 back along -up for 4 units against `camera.vision.wallMask`. The face's local y is `2 - hit.distance`.
+  2. Build the stack from that face: plate overlapping the face by 0.1, then the arm, then the dome; the vision cone goes at the dome's centre. If nothing is hit, keep today's fixed offsets and log a warning naming the camera.
+  3. Run Tools/Floorplan/Refresh Security Cameras, then capture all 6 cameras with Capture2DScene to check every plate touches its wall.
+  4. Story Test at level 1 (set `Floorplan.Demons` to 1, then back to 5), then web build 2.3, zip, and log.
+- Owner still to do: commit, play the itch draft, decide on the A* folder, and answer the Brent/Bryant art credit question.
