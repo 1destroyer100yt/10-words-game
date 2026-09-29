@@ -78,7 +78,7 @@ public class DecoyThrower : MonoBehaviour, IRunResettable
 
         Mouse mouse = Mouse.current;
         Camera view = Camera.main;
-        if (aimWithMouse && mouse != null && view != null && mouse.leftButton.wasPressedThisFrame)
+        if (aimWithMouse && !TouchControls.Active && mouse != null && view != null && mouse.leftButton.wasPressedThisFrame)
         {
             Vector2 pointer = view.ScreenToWorldPoint(mouse.position.ReadValue());
             Vector2 toPointer = pointer - origin;
@@ -142,7 +142,14 @@ public class DecoyThrower : MonoBehaviour, IRunResettable
 
     bool ThrowPressed()
     {
-        if (attack != null) return attack.WasPressedThisFrame();
+        if (attack != null)
+        {
+            if (!attack.WasPressedThisFrame()) return false;
+            // On a phone every tap on the screen would throw, including the one on the stick; there
+            // the throw button, which is a gamepad button, is the only way to throw.
+            InputDevice by = attack.activeControl != null ? attack.activeControl.device : null;
+            return !(TouchControls.Active && (by is Touchscreen || by is Mouse));
+        }
 
         Mouse mouse = Mouse.current;
         if (mouse != null && mouse.leftButton.wasPressedThisFrame) return true;

@@ -188,8 +188,8 @@ public class MenuScreen : MonoBehaviour
     /// <summary>A press on one of the three controls; true when it was handled here.</summary>
     bool Clicked()
     {
-        Mouse pointer = Mouse.current;
-        if (pointer == null || !pointer.leftButton.wasPressedThisFrame) return false;
+        Pointer pointer = Pointer.current;
+        if (pointer == null || !pointer.press.wasPressedThisFrame) return false;
 
         Vector2 point = pointer.position.ReadValue();
         foreach (Hotspot spot in hotspots)
@@ -262,8 +262,8 @@ public class MenuScreen : MonoBehaviour
     bool DragVolume()
     {
         if (!draggingVolume) return false;
-        Mouse pointer = Mouse.current;
-        if (pointer == null || !pointer.leftButton.isPressed)
+        Pointer pointer = Pointer.current;
+        if (pointer == null || !pointer.press.isPressed)
         {
             draggingVolume = false;
             SoundSettings.Commit();
@@ -542,7 +542,7 @@ public class MenuScreen : MonoBehaviour
     /// <summary>The three controls light up under the pointer, so they read as controls.</summary>
     void Hover()
     {
-        Mouse pointer = Mouse.current;
+        Pointer pointer = Pointer.current;
         Vector2 point = pointer != null ? pointer.position.ReadValue() : new Vector2(-10000,-10000);
         foreach (Hotspot spot in hotspots)
         {
@@ -973,8 +973,8 @@ public class MenuScreen : MonoBehaviour
                 return;
             }
         }
-        Mouse mouse = Mouse.current;
-        if (mouse != null && mouse.leftButton.wasPressedThisFrame && Time.unscaledTime - rebindStarted > 0.2f) EndRebind();
+        Pointer mouse = Pointer.current;
+        if (mouse != null && mouse.press.wasPressedThisFrame && Time.unscaledTime - rebindStarted > 0.2f) EndRebind();
     }
 
     void BlinkRebind()
@@ -1129,7 +1129,7 @@ public class MenuScreen : MonoBehaviour
     void BeginVolumeDrag()
     {
         draggingVolume = true;
-        Mouse pointer = Mouse.current;
+        Pointer pointer = Pointer.current;
         if (pointer != null) SetVolumeFromPointer(pointer.position.ReadValue());
     }
 

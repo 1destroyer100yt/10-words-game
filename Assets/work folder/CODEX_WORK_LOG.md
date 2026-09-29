@@ -655,3 +655,24 @@ Every claim was checked against the current code first; all held.
 ## 2026-09-29 — Web build 2.6 (owner said go)
 
 - Includes the camera 3 fix. It built in about 3 minutes (11 MB). In the browser, the game loaded, the skip button skipped into play, and the console was clean. Zip: `Build/itch/Jewel-of-the-Devil-web-2.6.zip`; `itch-page.md` points at it. This is the build to upload for the 30th.
+
+## 2026-09-29 — Mobile support, first pass (not yet built)
+
+- The owner asked to "just try" mobile before launch, and said it is fine if it is not finished. Launch stays on 2.6 (desktop).
+- New `TouchControls.cs`. It installs only on touch devices (`Application.isMobilePlatform`, or a touchscreen with no mouse), so on desktop nothing is created. Controls: an OnScreenStick (`<Gamepad>/leftStick`, dynamic origin) at the bottom left; OnScreenButtons at the bottom right for throw (`buttonWest`), hide (`buttonNorth`) and run (`leftStickPress`, held); pause (`start`) at the top left. It adds its own EventSystem and InputSystemUIInputModule (the game had none). It shows only while `AcceptsGameplayInput` is true. Placeholder art is drawn in code in the three colours.
+- `DecoyThrower`: while the touch controls are active, taps and mouse clicks no longer throw (the actions asset binds `<Touchscreen>/primaryTouch/tap` to Attack), and there is no mouse aim.
+- Menus, intro and cutscene skip read `Pointer.current` instead of `Mouse.current`, so a finger works like the mouse. On desktop, Pointer is the mouse.
+- On touch devices the intro lessons show the touch buttons instead of keys and the mouse.
+- `GraphicsQuality` defaults to Low on mobile when nothing is saved.
+- WebGL template CSS: `touch-action: none` and related rules, so touches cannot scroll, zoom or select the page.
+- Checked: layout via an editor play capture (the controls were forced on), and the Story Test passed at level 1 (desktop unaffected).
+- Still to do: a web build (ask the owner) and phone testing by the owner. Unknowns: speed on phones, iOS Safari, portrait mode (set itch orientation to landscape), throwing only the way you face on touch, and the settings panel's key rebinding (pointless on phones but harmless).
+
+## 2026-09-29 — Web build 2.7 (mobile test; owner said go)
+
+- Built in about 7 minutes (11 MB). Zip: `Build/itch/Jewel-of-the-Devil-web-2.7.zip` (first sent as "2.7-mobile-test"; that duplicate was removed before commit). The launch build stays 2.6, and `itch-page.md` still points at 2.6.
+- Browser check, desktop size: no touch controls, the intro shows keys, the skip button works with the mouse, clean console.
+- Browser check, emulated phone (Android user agent, 740x360 landscape; clicks arrive as mouse, not real touch): the intro shows the touch buttons; tapping the skip arrows and play works; the touch controls appear in play; dragging the stick moved and turned the player; the throw button threw one coin; pause opened the menu and tapping play resumed without an extra coin. Clean console.
+- The owner says the skip button size is fine on mobile.
+- Next: the owner tests on a real phone.
+- Later on 2026-09-29: the owner tested 2.7 on a real phone and with a controller: "works perfect for mobile and controller". 2.7 is now the launch build (`Build/itch/Jewel-of-the-Devil-web-2.7.zip`). `itch-page.md` now says to tick Mobile friendly with Landscape orientation, and the itch description and README mention the touch controls.

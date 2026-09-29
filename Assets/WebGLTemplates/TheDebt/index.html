@@ -8,6 +8,8 @@
   <style>
     html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #000; }
     #unity-canvas { display: block; width: 100%; height: 100%; background: #000; outline: none; }
+    /* Phones: fingers on the controls must not scroll, zoom or select the page. */
+    html, body, #unity-canvas { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
     #loading { position: fixed; inset: 0; display: grid; place-content: center; gap: 32px; pointer-events: none; background: #000; }
     .gem { width: 32px; height: 40px; background: #ed1c24; margin: auto; clip-path: polygon(20% 0,80% 0,100% 30%,50% 100%,0 30%); }
     progress { appearance: none; width: min(200px, 60vw); height: 4px; border: 0; background: #464646; color: #ed1c24; }

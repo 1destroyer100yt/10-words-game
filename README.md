@@ -36,6 +36,9 @@ colours: black, grey and red.
 | Mute, fullscreen, quality (title and pause screen) | M, F, Q | |
 | Volume down, up (title and pause screen) | - and = | LB, RB |
 
+On phones and tablets (held sideways) the game shows its own controls: a stick on the left, and run, hide and
+throw buttons on the right, with pause in the top left.
+
 The keys for moving, running, hiding and throwing can be changed: click the gear on the title or
 pause screen, click a key, then press the new one. The arrow keys, right Shift and the mouse click
 always work as well. The same panel sets the graphics quality (three bars: lower is smoother on weak

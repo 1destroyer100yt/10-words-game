@@ -138,7 +138,7 @@ public class PixelCutscene : MonoBehaviour
     /// <summary>True while the mouse is over the skip button.</summary>
     bool OverSkip()
     {
-        Mouse mouse = Mouse.current;
+        Pointer mouse = Pointer.current;
         if (mouse == null || !skipButton.enabled) return false;
         return RectTransformUtility.RectangleContainsScreenPoint(skipButton.rectTransform, mouse.position.ReadValue(), null);
     }
@@ -148,8 +148,8 @@ public class PixelCutscene : MonoBehaviour
     {
         Keyboard keyboard = Keyboard.current;
         if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame) return true;
-        Mouse mouse = Mouse.current;
-        if (overButton && mouse != null && mouse.leftButton.wasPressedThisFrame) return true;
+        Pointer mouse = Pointer.current;
+        if (overButton && mouse != null && mouse.press.wasPressedThisFrame) return true;
         Gamepad pad = Gamepad.current;
         return pad != null && pad.startButton.wasPressedThisFrame;
     }
@@ -158,8 +158,8 @@ public class PixelCutscene : MonoBehaviour
     {
         Keyboard keyboard = Keyboard.current;
         if (keyboard != null && keyboard.anyKey.wasPressedThisFrame) return true;
-        Mouse mouse = Mouse.current;
-        if (mouse != null && mouse.leftButton.wasPressedThisFrame) return true;
+        Pointer mouse = Pointer.current;
+        if (mouse != null && mouse.press.wasPressedThisFrame) return true;
         Gamepad pad = Gamepad.current;
         return pad != null && pad.buttonSouth.wasPressedThisFrame;
     }

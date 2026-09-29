@@ -64,13 +64,13 @@ public class IntroSequence : MonoBehaviour
         if (keyboard != null && keyboard.rightArrowKey.wasPressedThisFrame) { Next(); return; }
         if (pad != null && pad.dpad.left.wasPressedThisFrame) { Previous(); return; }
         if (pad != null && pad.dpad.right.wasPressedThisFrame) { Next(); return; }
-        var pointer = Mouse.current;
+        var pointer = Pointer.current;
         if (pointer != null)
         {
             Vector2 at = pointer.position.ReadValue();
             nextMark.color = Over(nextTarget, at) ? red : grey;
             skipMark.color = Over(skipTarget, at) ? red : grey;
-            if (pointer.leftButton.wasPressedThisFrame)
+            if (pointer.press.wasPressedThisFrame)
             {
                 if (Over(skipTarget, at)) { Finish(); return; }
                 if (Over(nextTarget, at)) { Next(); return; }
@@ -171,26 +171,42 @@ public class IntroSequence : MonoBehaviour
         if (Lesson == 0)
         {
             Graphic(stage, arrow, red, new Vector2(0, 160), new Vector2(30, 45));
-            Key(ControlBindings.Up, new Vector2(0, -131));
-            Key(ControlBindings.Left, new Vector2(-48, -179));
-            Key(ControlBindings.Down, new Vector2(0, -179));
-            Key(ControlBindings.Right, new Vector2(48, -179));
-            ShiftKey(new Vector2(-136, -179));
+            if (TouchControls.IsTouchDevice)
+            {
+                TouchButton(new Vector2(-60, -160), TouchControls.Icon.Disc, grey);
+                TouchButton(new Vector2(60, -160), TouchControls.Icon.Run, grey);
+            }
+            else
+            {
+                Key(ControlBindings.Up, new Vector2(0, -131));
+                Key(ControlBindings.Left, new Vector2(-48, -179));
+                Key(ControlBindings.Down, new Vector2(0, -179));
+                Key(ControlBindings.Right, new Vector2(48, -179));
+                ShiftKey(new Vector2(-136, -179));
+            }
         }
         else if (Lesson == 1)
         {
             Locker(new Vector2(-90, 0), 78);
             Locker(new Vector2(0, 160), 52);
-            Key(ControlBindings.Hide, new Vector2(0, -156));
+            if (TouchControls.IsTouchDevice) TouchButton(new Vector2(0, -156), TouchControls.Icon.Locker, grey);
+            else Key(ControlBindings.Hide, new Vector2(0, -156));
         }
         else if (Lesson == 2)
         {
             Graphic(stage, ring, grey, new Vector2(0, 160), new Vector2(66, 66));
             Graphic(stage, pixel, red, new Vector2(0, 160), new Vector2(12, 12));
-            var mouseHint = Graphic(stage, mouse, grey, new Vector2(0, -156), new Vector2(32, 48));
-            // Fill only the left 2x2 button recess in the 10x10 mouse sprite.
-            leftMouseButton = Graphic(mouseHint.rectTransform, pixel, red, new Vector2(-6.4f, 9.6f), new Vector2(6.4f, 9.6f));
-            leftMouseButton.name = "Left Mouse Button";
+            if (TouchControls.IsTouchDevice)
+            {
+                TouchButton(new Vector2(0, -156), TouchControls.Icon.Coin, red);
+            }
+            else
+            {
+                var mouseHint = Graphic(stage, mouse, grey, new Vector2(0, -156), new Vector2(32, 48));
+                // Fill only the left 2x2 button recess in the 10x10 mouse sprite.
+                leftMouseButton = Graphic(mouseHint.rectTransform, pixel, red, new Vector2(-6.4f, 9.6f), new Vector2(6.4f, 9.6f));
+                leftMouseButton.name = "Left Mouse Button";
+            }
         }
         else if (Lesson == 3)
         {
@@ -358,6 +374,13 @@ public class IntroSequence : MonoBehaviour
     /// A wide key with an up arrow on it: the Shift symbol, drawn rather than spelled, because the
     /// game's only words are the story's ten.
     /// </summary>
+    /// <summary>On a phone: the on-screen button the lesson is about, as it looks in the game.</summary>
+    void TouchButton(Vector2 at, TouchControls.Icon icon, Color iconColor)
+    {
+        Graphic(stage, TouchControls.IconSprite(TouchControls.Icon.Ring), grey, at, new Vector2(56, 56));
+        Graphic(stage, TouchControls.IconSprite(icon), iconColor, at, new Vector2(28, 28));
+    }
+
     void ShiftKey(Vector2 at)
     {
         const float w = 84f, h = 40f, edge = 3f;

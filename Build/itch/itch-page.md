@@ -8,9 +8,9 @@ Everything below is ready to paste. Build/ is not in git, so this file stays on 
 - **Short description / tagline:** A stealth horror game told in ten words.
 - **Classification:** Games
 - **Kind of project:** HTML
-- **Upload:** `Jewel-of-the-Devil-web-2.6.zip` (the newest one Claude sent). Tick **This file will be played in the browser**.
+- **Upload:** `Jewel-of-the-Devil-web-2.7.zip` (desktop, controller and phone; the owner tested all three). Tick **This file will be played in the browser**.
 - **Viewport dimensions:** 1280 x 720
-- **Frame options:** tick **Fullscreen button**. Leave **Mobile friendly** off (it needs a keyboard). Leave **SharedArrayBuffer support** off.
+- **Frame options:** tick **Fullscreen button**. Tick **Mobile friendly** and set **Orientation** to **Landscape** (phones get on-screen controls). Leave **SharedArrayBuffer support** off.
 - **Genre:** Action (or Survival)
 - **Tags:** horror, stealth, pixel-art, top-down, atmospheric, short, minimalist, singleplayer
 - **AI generation disclosure:** Yes, for graphics. (Part of the art was drawn by Codex and Claude through code. The demon voices were made by Claude in code, so answer Yes for sound too. Answer No for text.)

@@ -27,7 +27,7 @@ public static class GraphicsQuality
     /// <summary>0 = low, Levels - 1 = high. High by default: the game as it was drawn.</summary>
     public static int Level
     {
-        get => Mathf.Clamp(PlayerPrefs.GetInt(Key, Levels - 1), 0, Levels - 1);
+        get => Mathf.Clamp(PlayerPrefs.GetInt(Key, Application.isMobilePlatform ? 0 : Levels - 1), 0, Levels - 1);
         set
         {
             PlayerPrefs.SetInt(Key, Mathf.Clamp(value, 0, Levels - 1));
