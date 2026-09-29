@@ -632,3 +632,26 @@ Every claim was checked against the current code first; all held.
   3. Run Tools/Floorplan/Refresh Security Cameras, then capture all 6 cameras with Capture2DScene to check every plate touches its wall.
   4. Story Test at level 1 (set `Floorplan.Demons` to 1, then back to 5), then web build 2.3, zip, and log.
 - Owner still to do: commit, play the itch draft, decide on the A* folder, and answer the Brent/Bryant art credit question.
+
+## 2026-09-29 — Cameras fixed against their walls, web build 2.3
+
+- New `WallFaceY` in FloorplanSetup.Features.cs raycasts back from 1 unit out into the room to the camera's wall and stacks the plate, arm and dome from that face. All 6 cameras found their wall (the mount local y was -0.04 to -0.32; it used to be a fixed 0.375). A capture of each camera shows its plate on the wall.
+- Story Test passed at level 1; the saved level 5 was put back.
+- Web build 2.3 (incremental, 19 s). In the browser, the intro, title and story ran with a clean console. Zipped to `Build/itch/Jewel-of-the-Devil-web-2.3.zip`, and `itch-page.md` now points at it.
+
+## 2026-09-29 — Cutscene skip button (Brent's art), web build 2.4
+
+- `PixelCutscene`: a skip button in the top-right corner of every story scene. Clicking it, Esc or Start skips the whole scene; any other key still turns one frame. It waits 0.3 s so the click that started the run doesn't count. The art is loaded from `Resources/UI/skip-button.png` and `skip-button-hover.png`, and sized to about a ninth of the screen height at a whole-number scale.
+- Brent drew the button but was off sick, so the owner asked to finish his sketch lines "with his vision". `work folder/skip-button/finish_brent_cracks.py` turns his thin pale lines into full lava cracks using his own five bands and his ~26 px width, measured from his finished cracks. `make_game_button.py` crops it to his frame and shrinks it 6x to 192x115; the hover version has a red frame. His original file is untouched.
+- Owner decisions (2026-09-29): the word "SKIP" is allowed, as a second exception after the credits, and the orange/yellow lava is allowed as an exception to the palette.
+- Story Test passed at level 1 (level 5 put back). Web build 2.4: in the browser, the button shows in the opening, hover turns the frame red, and a click skipped straight into play. Clean console. Zip: `Build/itch/Jewel-of-the-Devil-web-2.4.zip`.
+- Later on 2026-09-29: the owner asked for a smaller skip button. It is now 7% of the screen tall with a 2.5% margin, smoothed (bilinear) rather than whole-pixel, and no longer covers the story pictures. Checked in an editor play capture. Not yet in a web build: the owner wants to be asked before each build.
+
+## 2026-09-29 — Web build 2.5 (owner said go)
+
+- Includes the smaller skip button. It built in about 5 minutes (11 MB). In the browser, the button sits small in the top-right corner, clear of the pictures, and a click skipped into play. Clean console. Zip: `Build/itch/Jewel-of-the-Devil-web-2.5.zip`; `itch-page.md` points at it.
+- Later on 2026-09-29: the owner flagged camera 3 (lower left, facing right). Its plate sat on a step of a staircase-shaped wall, half over floor. Moved camera 3 from y 29.05 to 28.75, onto the 0.9-long flat face just below (the plate is 0.6 wide), and re-ran Refresh Security Cameras; the capture shows it flush. Story Test passed at level 1 (level 5 put back). Waiting on the owner before web build 2.6. Note: a full level rebuild would place the cameras fresh and lose this hand fix.
+
+## 2026-09-29 — Web build 2.6 (owner said go)
+
+- Includes the camera 3 fix. It built in about 3 minutes (11 MB). In the browser, the game loaded, the skip button skipped into play, and the console was clean. Zip: `Build/itch/Jewel-of-the-Devil-web-2.6.zip`; `itch-page.md` points at it. This is the build to upload for the 30th.

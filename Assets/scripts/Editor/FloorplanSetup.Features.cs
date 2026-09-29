@@ -331,12 +331,15 @@ public static partial class FloorplanSetup
         mountRenderer.color = White;
         mountRenderer.sortingOrder = 3;
         mountRenderer.sharedMaterial = housingRenderer.sharedMaterial;
-        // The plate overlaps the wall face a little so it reads as fixed to it.
-        mount.localPosition = new Vector3(0f, 0.15f + CameraMountHeight * 0.5f, 0f);
+        // The plate overlaps the wall face a little so it reads as fixed to it. The face is measured,
+        // not assumed: wall spots sit at different depths, and a fixed offset left some cameras
+        // floating off their wall.
+        float plateY = WallFaceY(camera) - 0.1f;
+        mount.localPosition = new Vector3(0f, plateY + CameraMountHeight * 0.5f, 0f);
         mount.localRotation = Quaternion.identity;
         ScaleSprite(mount, icons.cameraMount, CameraDomeSize, CameraMountHeight);
 
-        float domeY = 0.15f + CameraMountHeight + CameraDomeSize * 0.5f - 0.05f;
+        float domeY = plateY + CameraMountHeight + CameraDomeSize * 0.5f - 0.05f;
         camera.housing.localPosition = new Vector3(0f, domeY, 0f);
         ScaleSprite(camera.housing, icons.cameraBody, CameraDomeSize, CameraDomeSize);
         if (camera.vision != null) camera.vision.transform.localPosition = new Vector3(0f, domeY, 0f);
@@ -350,6 +353,33 @@ public static partial class FloorplanSetup
         Vector2 dot = camera.lens is SpriteRenderer lensSprite && lensSprite.sprite != null
             ? (Vector2)lensSprite.sprite.bounds.size : Vector2.one;
         lens.localScale = new Vector3(lensSize / dot.x, lensSize / dot.y, 1f);
+    }
+
+    /// <summary>
+    /// How far in front of the camera's origin its wall face is, along the way the camera looks.
+    /// Casts back toward the wall from a point out in the room; the builder puts the origin about
+    /// 0.25 behind the face, which is the answer when nothing is hit.
+    /// </summary>
+    static float WallFaceY(SecurityCamera camera)
+    {
+        const float fallback = 0.25f;
+        const float reach = 1f;
+        Transform root = camera.transform;
+        int mask = camera.vision != null ? camera.vision.wallMask.value : 0;
+        if (mask == 0) return fallback;
+
+        Physics2D.SyncTransforms();
+        bool startInColliders = Physics2D.queriesStartInColliders;
+        Physics2D.queriesStartInColliders = false;
+        RaycastHit2D hit = Physics2D.Raycast(root.position + root.up * reach, -root.up, reach + 2f, mask);
+        Physics2D.queriesStartInColliders = startInColliders;
+
+        if (hit.collider == null)
+        {
+            Debug.LogWarning($"Security cameras: no wall found behind {camera.name}; kept the default spacing.", camera);
+            return fallback;
+        }
+        return reach - hit.distance;
     }
 
     /// <summary>Puts the current camera art on the cameras already in the scene, without a rebuild.</summary>

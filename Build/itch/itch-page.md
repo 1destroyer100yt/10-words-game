@@ -8,7 +8,7 @@ Everything below is ready to paste. Build/ is not in git, so this file stays on 
 - **Short description / tagline:** A stealth horror game told in ten words.
 - **Classification:** Games
 - **Kind of project:** HTML
-- **Upload:** `Jewel-of-the-Devil-web-2.2.zip` (the newest one Claude sent). Tick **This file will be played in the browser**.
+- **Upload:** `Jewel-of-the-Devil-web-2.6.zip` (the newest one Claude sent). Tick **This file will be played in the browser**.
 - **Viewport dimensions:** 1280 x 720
 - **Frame options:** tick **Fullscreen button**. Leave **Mobile friendly** off (it needs a keyboard). Leave **SharedArrayBuffer support** off.
 - **Genre:** Action (or Survival)
