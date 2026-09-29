@@ -9,9 +9,10 @@ using UnityEngine.UI;
 /// <summary>
 /// On-screen controls for phones and tablets: a stick on the left, and run, hide and throw on the
 /// right, with pause in the top left corner. Each one presses the matching part of a virtual gamepad,
-/// so the game reads them through the gamepad bindings it already has. The controls only exist on
-/// touch devices; on a computer this installs nothing. They show only while a run is being played.
-/// The art is a placeholder drawn here in the three colours.
+/// so the game reads them through the gamepad bindings it already has. They are built on a phone or
+/// tablet, or the first time anyone touches the screen: an iPad's browser says it is a Mac, so asking
+/// the browser alone misses it. On a computer nobody touches, nothing is built and this only watches.
+/// They show only while a run is being played. The art is a placeholder drawn here in the three colours.
 /// </summary>
 public class TouchControls : MonoBehaviour
 {
@@ -23,7 +24,7 @@ public class TouchControls : MonoBehaviour
     public static bool IsTouchDevice =>
         Application.isMobilePlatform || (Touchscreen.current != null && Mouse.current == null);
 
-    /// <summary>True once the controls are installed; the rest of the game can then ignore taps as clicks.</summary>
+    /// <summary>True once the controls are built; the rest of the game can then ignore taps as clicks.</summary>
     public static bool Active { get; private set; }
 
     static TouchControls instance;
@@ -32,11 +33,16 @@ public class TouchControls : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Install()
     {
-        if (!IsTouchDevice || instance != null) return;
+        if (instance != null) return;
         var go = new GameObject("Touch Controls");
         DontDestroyOnLoad(go);
         instance = go.AddComponent<TouchControls>();
-        Active = true;
+    }
+
+    static bool TouchedNow()
+    {
+        Touchscreen screen = Touchscreen.current;
+        return screen != null && screen.primaryTouch.press.wasPressedThisFrame;
     }
 
     // Reload Domain is off: forget the last play session's controls.
@@ -48,8 +54,9 @@ public class TouchControls : MonoBehaviour
         icons.Clear();
     }
 
-    void Awake()
+    void Build()
     {
+        Active = true;
         var canvas = gameObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 400;
@@ -77,6 +84,7 @@ public class TouchControls : MonoBehaviour
 
     void OnDestroy()
     {
+        if (!Active) { if (instance == this) instance = null; return; }
         SceneManager.sceneLoaded -= OnSceneLoaded;
         if (instance == this) { instance = null; Active = false; }
     }
@@ -93,6 +101,12 @@ public class TouchControls : MonoBehaviour
 
     void Update()
     {
+        if (!Active)
+        {
+            if (!IsTouchDevice && !TouchedNow()) return;
+            Build();
+        }
+
         GameRun run = GameRun.Instance;
         bool playing = run != null && run.AcceptsGameplayInput;
         Show(playing);

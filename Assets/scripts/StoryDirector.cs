@@ -387,11 +387,15 @@ public class StoryDirector : MonoBehaviour, IRunResettable
         // word card underneath still counts down on unscaled time.
         run.StoryPlaying = true;
 
+        bool wordsShown = false;
         yield return cutscene.Play(OpeningFrames, openingHolds, frame =>
         {
             // "YOU BORROWED THE LIGHT" lands on the theft, over the picture of it happening.
-            if (frame == TheftFrame && cards != null) cards.ShowOpeningCard();
+            if (frame == TheftFrame && cards != null) wordsShown = cards.ShowOpeningCard();
         });
+
+        // Skipping the pictures before the theft must not skip the game's first words as well.
+        if (!wordsShown && cards != null) cards.ShowOpeningCard();
 
         // Let the card finish rather than snapping to gameplay mid-word.
         while (cards != null && cards.IsShowing) yield return null;

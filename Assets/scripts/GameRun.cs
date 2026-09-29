@@ -212,10 +212,10 @@ public class GameRun : MonoBehaviour
         if (IsRunning) Spotted?.Invoke();
     }
 
-    /// <summary>Ends the run: slow motion, red flash, icon, then restart.</summary>
     /// <summary>What ended the last run, so its own scream can play.</summary>
     public Component CaughtBy { get; private set; }
 
+    /// <summary>Ends the run: slow motion, red flash, icon, then restart.</summary>
     public void CatchPlayer(Component by)
     {
         if (IsCaught || !IsRunning || InGrace) return;

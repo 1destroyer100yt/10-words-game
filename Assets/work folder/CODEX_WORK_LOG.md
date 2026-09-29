@@ -676,3 +676,11 @@ Every claim was checked against the current code first; all held.
 - The owner says the skip button size is fine on mobile.
 - Next: the owner tests on a real phone.
 - Later on 2026-09-29: the owner tested 2.7 on a real phone and with a controller: "works perfect for mobile and controller". 2.7 is now the launch build (`Build/itch/Jewel-of-the-Devil-web-2.7.zip`). `itch-page.md` now says to tick Mobile friendly with Landscape orientation, and the itch description and README mention the touch controls.
+
+## 2026-09-29 — Code audit fixes 1, 2 and 4 (not yet built)
+
+- Audit of everything changed since 2026-09-22 (voices, cameras, skip button, touch). Findings: (1) no touch controls on iPad, whose Safari reports a Mac; (2) skipping the opening before the theft frame lost "YOU BORROWED THE LIGHT"; (3) the controls crowd each other in portrait (left for after launch; itch Landscape covers most of it); (4) a misplaced doc comment in GameRun.
+- (1) `TouchControls` now always installs a watcher. It builds the controls on a mobile browser, or on the first real `Touchscreen` press, so it catches iPads. On a computer that is never touched, nothing is built.
+- (2) `StoryDirector.OpeningRoutine`: if the opening card did not show during the pictures, it shows after them. `ShowOpeningCard` already guards against showing twice.
+- (4) `GameRun`: the CatchPlayer and CaughtBy summaries are back on the right members.
+- Story Test passed at level 1 (level 5 put back). Waiting on the owner for web build 2.8.
