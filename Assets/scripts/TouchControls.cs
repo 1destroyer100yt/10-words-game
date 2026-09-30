@@ -28,7 +28,9 @@ public class TouchControls : MonoBehaviour
     public static bool Active { get; private set; }
 
     static TouchControls instance;
-    GameObject playSet, pauseButton;
+    GameObject playSet, pauseButton, turnHint;
+    CanvasScaler scaler;
+    bool wasUpright;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Install()
@@ -60,7 +62,7 @@ public class TouchControls : MonoBehaviour
         var canvas = gameObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 400;
-        var scaler = gameObject.AddComponent<CanvasScaler>();
+        scaler = gameObject.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1280, 720);
         scaler.matchWidthOrHeight = 1f;
@@ -76,6 +78,7 @@ public class TouchControls : MonoBehaviour
         Button("Run", "<Gamepad>/leftStickPress", new Vector2(-170, 330), 120, Icon.Run, Grey);
         pauseButton = Button("Pause", "<Gamepad>/start", new Vector2(80, -80), 90, Icon.Pause, Grey, topLeft: true);
         pauseButton.transform.SetParent(transform, false);
+        turnHint = TurnHint();
 
         SceneManager.sceneLoaded += OnSceneLoaded;
         EnsureEventSystem();
@@ -108,7 +111,18 @@ public class TouchControls : MonoBehaviour
         }
 
         GameRun run = GameRun.Instance;
-        bool playing = run != null && run.AcceptsGameplayInput;
+
+        // Held upright the controls crowd each other and the view is cut down: cover the screen with
+        // a picture asking for the phone to be turned, and pause a run in progress so nothing
+        // catches the player while they turn it.
+        bool upright = Screen.height > Screen.width;
+        if (turnHint.activeSelf != upright) turnHint.SetActive(upright);
+        // Size by the short side, so the picture fits across a narrow upright screen.
+        scaler.matchWidthOrHeight = upright ? 0f : 1f;
+        if (upright && !wasUpright && run != null && run.IsRunning && menu != null) menu.Open();
+        wasUpright = upright;
+
+        bool playing = run != null && run.AcceptsGameplayInput && !upright;
         Show(playing);
         bool paused = run != null && run.IsPaused;
         if (pauseButton.activeSelf != (playing && !paused)) pauseButton.SetActive(playing && !paused);
@@ -120,7 +134,32 @@ public class TouchControls : MonoBehaviour
         if (playSet.activeSelf != visible) playSet.SetActive(visible);
     }
 
+    MenuScreen menu => menuScreen != null ? menuScreen : (menuScreen = FindAnyObjectByType<MenuScreen>());
+    MenuScreen menuScreen;
+
     // ------------------------------------------------------------------ building
+
+    /// <summary>Black over everything, a phone upright, an arrow, the phone on its side.</summary>
+    GameObject TurnHint()
+    {
+        var cover = Rect("Turn Hint", transform, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+        Stretch(cover);
+        var black = cover.gameObject.AddComponent<Image>();
+        black.color = new Color(0f, 0f, 0f, 0.92f); // catches taps, so nothing behind it reacts
+        var phones = Rect("Phones", cover, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(520, 180));
+        var phonesImage = phones.gameObject.AddComponent<Image>();
+        phonesImage.sprite = Art(PhonesArt);
+        phonesImage.color = Grey;
+        phonesImage.raycastTarget = false;
+        var arrow = Rect("Arrow", cover, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(520, 180));
+        var arrowImage = arrow.gameObject.AddComponent<Image>();
+        arrowImage.sprite = Art(TurnArrowArt);
+        arrowImage.color = Red;
+        arrowImage.raycastTarget = false;
+        cover.SetAsLastSibling();
+        cover.gameObject.SetActive(false);
+        return cover.gameObject;
+    }
 
     void Stick(Vector2 centre)
     {
@@ -293,6 +332,33 @@ public class TouchControls : MonoBehaviour
         ".##..##.",
         "##..##..",
         "#...#...",
+    };
+
+    static readonly string[] PhonesArt =
+    {
+        "#####.....................",
+        "#...#.....................",
+        "#...#.....................",
+        "#...#..........#########..",
+        "#...#..........#.......#..",
+        "#...#..........#.......#..",
+        "#...#..........#.......#..",
+        "#...#..........#########..",
+        "#####.....................",
+    };
+
+    // Drawn over PhonesArt in the same box, in red.
+    static readonly string[] TurnArrowArt =
+    {
+        "..........................",
+        "..........................",
+        "...........#..............",
+        "...........##.............",
+        ".......#######............",
+        "...........##.............",
+        "...........#..............",
+        "..........................",
+        "..........................",
     };
 
     static readonly string[] PauseArt =

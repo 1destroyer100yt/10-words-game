@@ -18,7 +18,7 @@ public static class WebBuild
     const string MainScene = "Assets/Scenes/main.unity";
     const string Company = "Andrew";
     const string Product = "Jewel of the Devil";
-    const string Version = "2.7";
+    const string Version = "2.8";
     const string CreditsLogoPath = "Assets/Splash/credits.png";
 
     /// <summary>Where the player lands; kept beside the project rather than inside Assets.</summary>

@@ -684,3 +684,11 @@ Every claim was checked against the current code first; all held.
 - (2) `StoryDirector.OpeningRoutine`: if the opening card did not show during the pictures, it shows after them. `ShowOpeningCard` already guards against showing twice.
 - (4) `GameRun`: the CatchPlayer and CaughtBy summaries are back on the right members.
 - Story Test passed at level 1 (level 5 put back). Waiting on the owner for web build 2.8.
+
+## 2026-09-30 (launch day) — Web build 2.8
+
+- Audit fix 3 added: on touch devices held upright, `TouchControls` covers the screen with a picture (a phone upright, a red arrow, the phone on its side; no words), hides the controls, and opens the pause menu if a run is going. While upright, the canvas scaler matches width so the picture fits.
+- 2.8 also carries fixes 1, 2 and 4 from 2026-09-29 (iPad first touch, opening words after a skip, GameRun doc comment).
+- The batch-mode build could not run because the owner had Unity open; built through the editor instead (about 4.5 minutes, 11 MB).
+- Browser checks: desktop shows keys; Esc on the very first opening picture still shows "YOU BORROWED THE LIGHT"; an emulated upright phone shows the turn picture, and turning to landscape removes it with the intro continuing; clean console.
+- Zip: `Build/itch/Jewel-of-the-Devil-web-2.8.zip`; `itch-page.md` points at it. This is the launch build.
